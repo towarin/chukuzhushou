@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>出库助手</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: pointer; }
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes zoom-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    @keyframes slide-in-from-bottom-12 { from { opacity: 0; transform: translateY(3rem); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slide-in-from-right { from { opacity: 0; transform: translateX(2rem); } to { opacity: 1; transform: translateX(0); } }
+    .animate-in { animation-duration: 0.3s; animation-fill-mode: both; }
+    .fade-in { animation-name: fade-in; }
+    .zoom-in { animation-name: zoom-in; }
+    .slide-in-from-bottom-12 { animation-name: slide-in-from-bottom-12; }
+    .slide-in-from-right { animation-name: slide-in-from-right; }
+    .duration-500 { animation-duration: 0.5s; }
+    .drag-ghost { opacity: 0.4; }
+    .drag-over { border-color: #1e293b !important; background-color: #f1f5f9; }
+    @keyframes highlight-flash {
+      0% { background-color: #fef9e7; box-shadow: inset 0 0 0 2px #fde68a; }
+      100% { background-color: transparent; box-shadow: inset 0 0 0 2px transparent; }
+    }
+    .highlight-row { animation: highlight-flash 2s ease-out; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin></script>
+
+  <script type="text/babel">
+    const { useState, useMemo, useEffect, useCallback, useRef } = React;
+
+    // ── Icon components ──
+    const svgIcon = (d) => ({ size = 24, ...props }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+        {d}
+      </svg>
+    );
+
+    const Plus = svgIcon(<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>);
+    const Minus = svgIcon(<line x1="5" y1="12" x2="19" y2="12"/>);
+    const X = svgIcon(<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>);
+    const ChevronDown = svgIcon(<polyline points="6 9 12 15 18 9"/>);
+    const ChevronRight = svgIcon(<polyline points="9 18 15 12 9 6"/>);
+    const ArrowRight = svgIcon(<><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></>);
+    const CheckCircle2 = svgIcon(<><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></>);
+    const AlertCircle = svgIcon(<><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>);
+    const Copy = svgIcon(<><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></>);
+    const Film = svgIcon(<><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/><line x1="17" y1="17" x2="22" y2="17"/></>);
+    const LayoutDashboard = svgIcon(<><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></>);
+    const ClipboardList = svgIcon(<><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><line x1="10" y1="11" x2="14" y2="11"/><line x1="10" y1="15" x2="14" y2="15"/></>);
+    const Boxes = svgIcon(<><path d="M2.97 12.92A2 2 0 002 14.63v3.24a2 2 0 00.97 1.71l3 1.8a2 2 0 002.06 0L12 19v-5.5l-5-3-4.03 2.42z"/><path d="M7 16.5l5 3 4.97-2.92A2 2 0 0018 14.87v-3.24a2 2 0 00-.97-1.71l-3-1.8a2 2 0 00-2.06 0L7 11v5.5z"/><path d="M7 11l5-3 5 3"/></>);
+    const Save = svgIcon(<><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></>);
+    const Edit3 = svgIcon(<><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></>);
+    const MapPin = svgIcon(<><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></>);
+    const RefreshCw = svgIcon(<><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></>);
+    const RotateCcw = svgIcon(<><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 018.08-3.78A9 9 0 0120.49 15"/></>);
+    const Calendar = svgIcon(<><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>);
+    const Trash2 = svgIcon(<><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></>);
+    const Trash = svgIcon(<><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></>);
+    const GripVertical = svgIcon(<><circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/></>);
+    const History = svgIcon(<><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>);
+    const Search = svgIcon(<><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>);
+    const EquipmentCase = svgIcon(<><rect x="1" y="6" width="22" height="16" rx="2" ry="2"/><path d="M7 6V4a2 2 0 012-2h6a2 2 0 012 2v2"/><circle cx="12" cy="14" r="3"/></>);
+    const ArrowLeft = svgIcon(<><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></>);
+
+
+    // ── Storage keys ──
+    const STORAGE_KEY = 'zhushi_equipment_data_v2';
+    const VERSIONS_KEY = 'zhushi_versions_v2';
+    const MAX_VERSIONS = 30;
+
+    // ── Default data ──
+    const defaultGroups = [
+      {
+        id: 'g1', name: '摄影器材', isExpanded: true,
+        subgroups: [
+          { id: 'sg1', name: '机身', isExpanded: true, items: [{ id: 'i1', name: 'Sony A7S3', model: 'A7S3', count: 0, remark: '含电池' }] },
+          { id: 'sg2', name: '镜头', isExpanded: true, items: [{ id: 'i2', name: '24-70mm f2.8', model: 'GM II', count: 0, remark: '' }] }
+        ]
+      }
+    ];
+
+    const defaultPresets = [
+      { id: 'p1', name: '常用单机套装', items: [{ itemId: 'i1', count: 1 }] }
+    ];
+
+    // ── Load from localStorage ──
+    const loadState = () => {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const data = JSON.parse(raw);
+          return {
+            groups: data.groups || defaultGroups,
+            presets: data.presets || defaultPresets,
+            projectInfo: data.projectInfo || { name: '', startDate: '', endDate: '', location: '' }
+          };
+        }
+      } catch (e) {}
+      return { groups: defaultGroups, presets: defaultPresets, projectInfo: { name: '', startDate: '', endDate: '', location: '' } };
+    };
+
+    const loadVersions = () => {
+      try {
+        const raw = localStorage.getItem(VERSIONS_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) { return []; }
+    };
+
+    const saved = loadState();
+    const savedVersions = loadVersions();
+
+    // ── Helpers ──
+    const fmtTime = (iso) => {
+      const d = new Date(iso);
+      const pad = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    };
+
+    // ── App ──
+    const App = () => {
+      const [groups, setGroups] = useState(saved.groups);
+      const [presets, setPresets] = useState(saved.presets);
+      const [projectInfo, setProjectInfo] = useState(saved.projectInfo);
+
+      const [activePresetId, setActivePresetId] = useState(null);
+      const [activeModule, setActiveModule] = useState('inventory');
+      const [activeGroupId, setActiveGroupId] = useState(saved.groups[0]?.id || 'g1');
+      const [activeSubgroupId, setActiveSubgroupId] = useState(saved.groups[0]?.subgroups[0]?.id || 'sg1');
+
+      const [modal, setModal] = useState({ show: false, type: '', title: '', value: '', targetId: null, extraData: null });
+      const [toast, setToast] = useState({ show: false, message: '' });
+      const [versions, setVersions] = useState(savedVersions);
+      const [versionPanelOpen, setVersionPanelOpen] = useState(false);
+      const [searchQuery, setSearchQuery] = useState('');
+      const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+      const [highlightedItemId, setHighlightedItemId] = useState(null);
+      const [dragIndex, setDragIndex] = useState(null);
+      const [restoreConfirm, setRestoreConfirm] = useState(null);
+
+      // Keep a ref of current state so saveVersion can always read latest
+      const stateRef = useRef({ groups, presets, projectInfo });
+      useEffect(() => { stateRef.current = { groups, presets, projectInfo }; }, [groups, presets, projectInfo]);
+
+      // Save to localStorage whenever data changes
+      useEffect(() => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ groups, presets, projectInfo }));
+      }, [groups, presets, projectInfo]);
+
+      const showToast = useCallback((message) => {
+        setToast({ show: true, message });
+        setTimeout(() => setToast({ show: false, message: '' }), 2000);
+      }, []);
+
+      const saveVersion = useCallback((label) => {
+        const { groups: g, presets: p, projectInfo: pi } = stateRef.current;
+        const v = { id: Date.now(), time: new Date().toISOString(), label, groups: JSON.parse(JSON.stringify(g)), presets: JSON.parse(JSON.stringify(p)), projectInfo: { ...pi } };
+        setVersions(prev => {
+          const next = [v, ...prev].slice(0, MAX_VERSIONS);
+          localStorage.setItem(VERSIONS_KEY, JSON.stringify(next));
+          return next;
+        });
+      }, []);
+
+      const restoreVersion = useCallback((v) => {
+        setGroups(JSON.parse(JSON.stringify(v.groups)));
+        setPresets(JSON.parse(JSON.stringify(v.presets)));
+        setProjectInfo({ ...v.projectInfo });
+        setVersionPanelOpen(false);
+        setRestoreConfirm(null);
+        showToast(`已恢复到「${v.label}」(${fmtTime(v.time)})`);
+      }, [showToast]);
+
+      const calculateDays = useCallback(() => {
+        if (!projectInfo.startDate || !projectInfo.endDate) return 0;
+        const start = new Date(projectInfo.startDate);
+        const end = new Date(projectInfo.endDate);
+        const diffTime = end - start;
+        return diffTime < 0 ? 0 : Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+      }, [projectInfo.startDate, projectInfo.endDate]);
+
+      const toggleGroupExpand = useCallback((groupId) => {
+        setGroups(groups => groups.map(g => g.id === groupId ? { ...g, isExpanded: !g.isExpanded } : g));
+      }, []);
+
+      const toggleSubgroupExpand = useCallback((groupId, subgroupId) => {
+        setGroups(groups => groups.map(g => g.id === groupId ? {
+          ...g,
+          subgroups: g.subgroups.map(sg => sg.id === subgroupId ? { ...sg, isExpanded: !sg.isExpanded } : sg)
+        } : g));
+      }, []);
+
+      // ── Drag & Drop handlers ──
+      const handleDragStart = useCallback((e, index) => {
+        setDragIndex(index);
+        e.dataTransfer.effectAllowed = 'move';
+        e.currentTarget.classList.add('drag-ghost');
+      }, []);
+
+      const handleDragOver = useCallback((e, index) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (dragIndex === null || dragIndex === index) return;
+        setGroups(groups => {
+          const arr = [...groups];
+          const [item] = arr.splice(dragIndex, 1);
+          arr.splice(index, 0, item);
+          return arr;
+        });
+        setDragIndex(index);
+      }, [dragIndex]);
+
+      const handleDragEnd = useCallback((e) => {
+        e.currentTarget.classList.remove('drag-ghost');
+        setDragIndex(null);
+        saveVersion('调整大组顺序');
+      }, [saveVersion]);
+
+      const flatItems = useMemo(() => {
+        let items = [];
+        groups.forEach(g => {
+          g.subgroups.forEach(sg => {
+            sg.items.forEach(it => {
+              items.push({ ...it, groupId: g.id, groupName: g.name, subgroupId: sg.id, subgroupName: sg.name });
+            });
+          });
+        });
+        return items;
+      }, [groups]);
+
+      // Search results — fuzzy match across name, model, remark
+      const searchResults = useMemo(() => {
+        if (!searchQuery.trim()) return [];
+        const q = searchQuery.toLowerCase();
+        return flatItems.filter(it =>
+          it.name.toLowerCase().includes(q) ||
+          it.model.toLowerCase().includes(q) ||
+          it.remark.toLowerCase().includes(q)
+        ).slice(0, 8); // max 8 results
+      }, [flatItems, searchQuery]);
+
+      // Navigate to a specific item in inventory
+      const navigateToItem = useCallback((item) => {
+        setActiveGroupId(item.groupId);
+        setActiveSubgroupId(item.subgroupId);
+        setActiveModule('inventory');
+        setSearchQuery('');
+        setShowSearchDropdown(false);
+        // Flash highlight + scroll to the target row
+        setHighlightedItemId(null);
+        setTimeout(() => setHighlightedItemId(item.id), 100);
+        setTimeout(() => setHighlightedItemId(null), 2400);
+      }, []);
+
+      // Scroll to highlighted item after search navigation
+      useEffect(() => {
+        if (highlightedItemId) {
+          const timer = setTimeout(() => {
+            const el = document.querySelector(`[data-item-id="${highlightedItemId}"]`);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 150);
+          return () => clearTimeout(timer);
+        }
+      }, [highlightedItemId]);
+
+      // Close search dropdown on outside click
+      useEffect(() => {
+        const handler = () => setShowSearchDropdown(false);
+        if (showSearchDropdown) {
+          document.addEventListener('click', handler);
+          return () => document.removeEventListener('click', handler);
+        }
+      }, [showSearchDropdown]);
+
+      const handleModalConfirm = useCallback(() => {
+        const { type, value, targetId, extraData } = modal;
+
+        if (type === 'addGroup') {
+          if (!value.trim()) return;
+          saveVersion('新建大组');
+          const newId = 'g_' + Date.now();
+          setGroups(groups => [...groups, { id: newId, name: value, isExpanded: true, subgroups: [] }]);
+          setActiveGroupId(newId);
+        }
+        else if (type === 'renameGroup') {
+          if (!value.trim()) return;
+          saveVersion('重命名大组');
+          setGroups(groups => groups.map(g => g.id === targetId ? { ...g, name: value } : g));
+        }
+        else if (type === 'deleteGroup') {
+          saveVersion('删除大组');
+          setGroups(groups => {
+            const newGroups = groups.filter(g => g.id !== targetId);
+            if (activeGroupId === targetId) setActiveGroupId(newGroups[0]?.id || null);
+            return newGroups;
+          });
+        }
+        else if (type === 'addSubgroup') {
+          if (!value.trim()) return;
+          saveVersion('添加小组');
+          const newSubId = 'sg_' + Date.now();
+          setGroups(groups => groups.map(g => g.id === activeGroupId ? { ...g, subgroups: [...g.subgroups, { id: newSubId, name: value, isExpanded: true, items: [] }] } : g));
+          setActiveSubgroupId(newSubId);
+        }
+        else if (type === 'renameSubgroup') {
+          if (!value.trim()) return;
+          saveVersion('重命名小组');
+          setGroups(groups => groups.map(g => ({ ...g, subgroups: g.subgroups.map(sg => sg.id === targetId ? { ...sg, name: value } : sg) })));
+        }
+        else if (type === 'deleteSubgroup') {
+          saveVersion('删除小组');
+          setGroups(groups => groups.map(g => g.id === activeGroupId ? { ...g, subgroups: g.subgroups.filter(sg => sg.id !== targetId) } : g));
+          setActiveSubgroupId(null);
+        }
+        else if (type === 'globalReset') {
+          saveVersion('全局清零');
+          setGroups(groups => groups.map(g => ({ ...g, subgroups: g.subgroups.map(sg => ({ ...sg, items: sg.items.map(it => ({ ...it, count: 0 })) })) })));
+          showToast("全局出库数量已清零");
+        }
+        else if (type === 'resetGroup') {
+          saveVersion('重置大组数量');
+          setGroups(groups => groups.map(g => g.id === targetId ? { ...g, subgroups: g.subgroups.map(sg => ({ ...sg, items: sg.items.map(it => ({ ...it, count: 0 })) })) } : g));
+          showToast("该大组下所有设备数量已重置");
+        }
+        else if (type === 'resetSubgroup') {
+          saveVersion('重置小组数量');
+          setGroups(groups => groups.map(g => ({ ...g, subgroups: g.subgroups.map(sg => sg.id === targetId ? { ...sg, items: sg.items.map(it => ({ ...it, count: 0 })) } : sg) })));
+          showToast("该小组下所有设备数量已重置");
+        }
+        else if (type === 'addPreset') {
+          if (!value.trim()) return;
+          saveVersion('创建预设模版');
+          const newP = { id: 'p_' + Date.now(), name: value, items: [] };
+          setPresets(presets => [...presets, newP]);
+          setActivePresetId(newP.id);
+        }
+        else if (type === 'renamePreset') {
+          saveVersion('重命名预设');
+          setPresets(presets => presets.map(p => p.id === targetId ? { ...p, name: value } : p));
+        }
+        else if (type === 'deletePreset') {
+          saveVersion('删除预设模版');
+          setPresets(presets => presets.filter(p => p.id !== targetId));
+          setActivePresetId(null);
+        }
+        else if (type === 'clearPresetContent') {
+          saveVersion('清空预设内容');
+          setPresets(presets => presets.map(p => p.id === targetId ? { ...p, items: [] } : p));
+        }
+        else if (type === 'deleteItem') {
+          saveVersion('删除设备');
+          setGroups(groups => groups.map(g => ({ ...g, subgroups: g.subgroups.map(sg => ({ ...sg, items: sg.items.filter(it => it.id !== extraData.itemId) })) })));
+        }
+        setModal(m => ({ ...m, show: false }));
+      }, [modal, activeGroupId, activeSubgroupId, saveVersion, showToast]);
+
+      const updateItem = useCallback((itemId, field, value) => {
+        setGroups(groups => groups.map(g => ({ ...g, subgroups: g.subgroups.map(sg => ({ ...sg, items: sg.items.map(it => it.id === itemId ? { ...it, [field]: value } : it) })) })));
+      }, []);
+
+      const adjustCount = useCallback((itemId, delta) => {
+        setGroups(groups => groups.map(g => ({ ...g, subgroups: g.subgroups.map(sg => ({ ...sg, items: sg.items.map(it => it.id === itemId ? { ...it, count: Math.max(0, it.count + delta) } : it) })) })));
+      }, []);
+
+      const toggleItemInPreset = useCallback((itemId) => {
+        if (!activePresetId) return;
+        setPresets(presets => presets.map(p => {
+          if (p.id === activePresetId) {
+            const exists = p.items.find(i => i.itemId === itemId);
+            return { ...p, items: exists ? p.items.filter(i => i.itemId !== itemId) : [...p.items, { itemId, count: 1 }] };
+          }
+          return p;
+        }));
+      }, [activePresetId]);
+
+      const updatePresetItemCount = useCallback((itemId, delta) => {
+        setPresets(presets => presets.map(p => p.id === activePresetId ? { ...p, items: p.items.map(it => it.itemId === itemId ? { ...it, count: Math.max(0, it.count + delta) } : it) } : p));
+      }, [activePresetId]);
+
+      const applyPreset = useCallback((pid) => {
+        const preset = presets.find(p => p.id === pid);
+        if (!preset) return;
+        saveVersion(`应用预设「${preset.name}」`);
+        setGroups(groups => groups.map(g => ({ ...g, subgroups: g.subgroups.map(sg => ({ ...sg, items: sg.items.map(it => {
+          const pi = preset.items.find(pitem => pitem.itemId === it.id);
+          return pi ? { ...it, count: pi.count } : it;
+        }) })) })));
+        showToast(`预设「${preset.name}」已应用`);
+        setActiveModule('inventory');
+      }, [presets, showToast, saveVersion]);
+
+      const currentPreset = presets.find(p => p.id === activePresetId);
+      const groupedPresetItems = useMemo(() => {
+        if (!currentPreset) return [];
+        let grouped = {};
+        currentPreset.items.forEach(pi => {
+          const detail = flatItems.find(f => f.id === pi.itemId);
+          if (detail) {
+            const key = `${detail.groupName} / ${detail.subgroupName}`;
+            if (!grouped[key]) grouped[key] = [];
+            grouped[key].push({ ...detail, presetCount: pi.count });
+          }
+        });
+        return Object.entries(grouped);
+      }, [currentPreset, flatItems]);
+
+      const selectedItemsManifest = useMemo(() => groups.map(g => ({
+        ...g,
+        subgroups: g.subgroups.map(sg => ({ ...sg, items: sg.items.filter(item => item.count > 0) })).filter(sg => sg.items.length > 0)
+      })).filter(g => g.subgroups.length > 0), [groups]);
+
+      const activeGroup = groups.find(g => g.id === activeGroupId);
+      const activeSubgroup = activeGroup?.subgroups.find(sg => sg.id === activeSubgroupId);
+
+      const handleCopyManifest = () => {
+        const totalItems = selectedItemsManifest.reduce((acc, g) => acc + g.subgroups.reduce((sacc, sg) => sacc + sg.items.reduce((iacc, it) => iacc + it.count, 0), 0), 0);
+        let text = `【竹石影视清单】\n`;
+        text += `项目：${projectInfo.name || '未命名'}\n`;
+        text += `地点：${projectInfo.location || '未记录'}\n`;
+        text += `周期：${projectInfo.startDate || '未定'} 至 ${projectInfo.endDate || '未定'} (共 ${calculateDays()} 天)\n`;
+        text += `总件数：${totalItems}\n`;
+        text += `----------------\n`;
+
+        selectedItemsManifest.forEach(g => {
+          text += `\n[${g.name}]\n`;
+          g.subgroups.forEach(sg => {
+            text += `>> ${sg.name}\n`;
+            sg.items.forEach(it => {
+              text += `- ${it.name} ${it.model ? '(' + it.model + ')' : ''} x${it.count} ${it.remark ? '[' + it.remark + ']' : ''}\n`;
+            });
+          });
+        });
+
+        navigator.clipboard.writeText(text).then(() => {
+          showToast("清单已成功复制到剪贴板");
+        }).catch(() => {
+          showToast("复制失败，请手动选择复制");
+        });
+      };
+
+      const handleDeleteVersion = useCallback((e, vid) => {
+        e.stopPropagation();
+        setVersions(prev => {
+          const next = prev.filter(v => v.id !== vid);
+          localStorage.setItem(VERSIONS_KEY, JSON.stringify(next));
+          return next;
+        });
+      }, []);
+
+      const handleClearVersions = useCallback(() => {
+        setVersions([]);
+        localStorage.removeItem(VERSIONS_KEY);
+        showToast('所有版本记录已清除');
+      }, [showToast]);
+
+      return (
+        <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-800 pb-24">
+          <div className="max-w-7xl mx-auto">
+            {/* Header */}
+            <header className="mb-6 lg:mb-8 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+              <div className="flex items-center gap-3 lg:gap-4 shrink-0">
+                <div className="w-10 h-10 lg:w-12 lg:h-12 bg-slate-900 rounded-2xl flex items-center justify-center shadow-2xl ring-4 ring-slate-100 shrink-0"><Film className="text-white" size={22} /></div>
+                <h1 className="text-lg lg:text-2xl font-black text-slate-900 tracking-tight whitespace-nowrap">出库助手</h1>
+              </div>
+              <div className="flex items-center gap-2 lg:gap-4 flex-wrap w-full lg:w-auto">
+                {/* Search */}
+                <div className="relative flex-1 sm:flex-none min-w-[120px] sm:min-w-0" onClick={e => e.stopPropagation()}>
+                  <div className="flex items-center bg-white rounded-2xl border border-slate-200 shadow-sm focus-within:ring-2 focus-within:ring-slate-300 focus-within:border-slate-300 transition-all">
+                    <Search size={14} className="ml-3 lg:ml-4 text-slate-400 shrink-0" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={e => { setSearchQuery(e.target.value); setShowSearchDropdown(true); }}
+                      onFocus={() => searchQuery.trim() && setShowSearchDropdown(true)}
+                      placeholder="搜索..."
+                      className="w-full sm:w-28 lg:w-44 bg-transparent border-none pl-2 lg:pl-3 pr-2 lg:pr-3 py-2.5 lg:py-3 text-xs lg:text-sm font-bold outline-none text-slate-700 placeholder:text-slate-300"
+                    />
+                    {searchQuery && (
+                      <button onClick={() => { setSearchQuery(''); setShowSearchDropdown(false); }} className="pr-2 lg:pr-3 text-slate-300 hover:text-slate-500 transition-colors">
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+                  {/* Dropdown */}
+                  {showSearchDropdown && searchQuery.trim() && (
+                    <div className="absolute top-full left-0 right-0 sm:left-auto sm:right-0 mt-2 sm:w-72 bg-white rounded-2xl border border-slate-100 shadow-xl overflow-hidden z-50 animate-in fade-in">
+                      {searchResults.length > 0 ? (
+                        searchResults.map(it => (
+                          <button
+                            key={it.id}
+                            onClick={() => navigateToItem(it)}
+                            className="w-full px-4 lg:px-5 py-3 lg:py-3.5 text-left hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-b-0 flex items-center justify-between gap-2 lg:gap-3"
+                          >
+                            <div className="min-w-0">
+                              <p className="font-black text-slate-800 text-[12px] lg:text-[13px] truncate">{it.name}</p>
+                              {it.model && <span className="text-[10px] text-slate-400 font-bold mr-1">{it.model}</span>}
+                            </div>
+                            <span className="text-[9px] lg:text-[10px] text-slate-300 font-bold shrink-0">{it.groupName} / {it.subgroupName}</span>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-5 py-6 text-center text-xs font-bold text-slate-300">未找到匹配器材</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <button onClick={() => setModal({ show: true, type: 'globalReset', title: '全局重置出库数量？' })} className="shrink-0 p-2.5 sm:px-4 sm:py-3 bg-white text-red-500 rounded-2xl text-xs sm:text-sm font-black flex items-center gap-1 sm:gap-1.5 hover:bg-red-50 transition-all border border-red-100 shadow-sm" title="全局清零"><RefreshCw size={14} className="sm:hidden" /><RefreshCw size={16} className="hidden sm:inline" /> <span className="hidden sm:inline">全局清零</span></button>
+                <nav className="bg-white p-1 lg:p-1.5 rounded-2xl border border-slate-200 shadow-sm flex gap-0.5 lg:gap-1">
+                  {[
+                    { id: 'inventory', icon: LayoutDashboard, label: '仓库管理', short: '仓库' },
+                    { id: 'preset', icon: Boxes, label: '预设模版', short: '预设' },
+                    { id: 'manifest', icon: ClipboardList, label: '出库清单', short: '出库' }
+                  ].map(tab => (
+                    <button key={tab.id} onClick={() => setActiveModule(tab.id)} className={`flex items-center gap-1 lg:gap-2 px-2.5 sm:px-5 py-2.5 lg:py-3 rounded-xl text-xs lg:text-sm font-black transition-all ${activeModule === tab.id ? 'bg-slate-900 text-white shadow-xl translate-y-[-1px]' : 'text-slate-400 hover:text-slate-600'}`}>
+                      <tab.icon size={15} className="lg:hidden" /><tab.icon size={18} className="hidden lg:inline" /> <span className="hidden sm:inline">{tab.label}</span><span className="sm:hidden">{tab.short}</span>
+                    </button>
+                  ))}
+                </nav>
+                <button onClick={() => setVersionPanelOpen(true)} className="relative p-2.5 lg:p-3 bg-white rounded-2xl border border-slate-200 text-slate-500 hover:text-slate-900 hover:border-slate-400 transition-all shadow-sm shrink-0" title="版本记录">
+                  <History size={16} className="lg:hidden" /><History size={20} className="hidden lg:inline" />
+                  {versions.length > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 lg:w-5 lg:h-5 bg-indigo-600 text-white text-[9px] lg:text-[10px] font-black rounded-full flex items-center justify-center">{versions.length > 99 ? '99+' : versions.length}</span>}
+                </button>
+              </div>
+            </header>
+
+            {/* Module: Inventory */}
+            {activeModule === 'inventory' && (
+              <div className="flex flex-col lg:flex-row gap-8 animate-in fade-in duration-500 min-h-[500px] lg:h-[calc(100vh-220px)]">
+                <aside className={`w-full lg:w-72 flex flex-col shrink-0 ${activeSubgroup ? 'hidden' : 'flex'} lg:flex`}>
+                   <div className="flex items-center justify-between px-3 shrink-0 mb-3">
+                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">器材分类</h3>
+                     <button onClick={() => setModal({ show: true, type: 'addGroup', title: '新建资产大组', value: '' })} className="p-2 bg-white rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-900 hover:text-white transition-all shadow-sm"><Plus size={18} /></button>
+                   </div>
+                   <div className="space-y-3 overflow-y-auto hide-scrollbar flex-1 pb-4 pr-1">
+                     {groups.map((g, idx) => (
+                       <div key={g.id}
+                         draggable
+                         onDragStart={(e) => handleDragStart(e, idx)}
+                         onDragOver={(e) => handleDragOver(e, idx)}
+                         onDragEnd={handleDragEnd}
+                         className={`bg-white rounded-2xl border transition-all group/drag ${activeGroupId === g.id ? 'border-slate-300 shadow-md ring-4 ring-slate-100/50' : 'border-slate-100'} ${dragIndex === idx ? 'drag-ghost' : ''}`}
+                       >
+                         <div className="flex items-center justify-between p-1.5">
+                            {/* Drag handle */}
+                            <div className="flex items-center gap-1 pl-1 text-slate-200 hover:text-slate-500 cursor-grab active:cursor-grabbing shrink-0" title="长按拖放排序">
+                              <GripVertical size={16} />
+                            </div>
+                            <button onClick={() => { setActiveGroupId(g.id); toggleGroupExpand(g.id); }} className={`flex-1 flex items-center gap-2 px-2 py-3 rounded-xl text-left text-[14px] font-black ${activeGroupId === g.id ? 'text-slate-900' : 'text-slate-500 hover:bg-slate-50'}`}>
+                              {g.isExpanded ? <ChevronDown size={16} className="text-slate-400" /> : <ChevronRight size={16} className="text-slate-400" />} {g.name}
+                            </button>
+                            <div className="flex items-center gap-0.5 px-1 shrink-0">
+                              <button onClick={(e) => { e.stopPropagation(); setActiveGroupId(g.id); setModal({ show: true, type: 'renameGroup', title: '修改大组名称', value: g.name, targetId: g.id }); }} className="p-2 text-slate-200 hover:text-indigo-500 transition-colors" title="重命名"><Edit3 size={13} /></button>
+                              <button onClick={() => setModal({ show: true, type: 'resetGroup', title: `重置「${g.name}」下所有数量？`, targetId: g.id })} className="p-2 text-orange-200 hover:text-orange-500 transition-colors"><RefreshCw size={14} /></button>
+                              <button onClick={() => setModal({ show: true, type: 'deleteGroup', title: '删除大组？', targetId: g.id })} className="p-2 text-slate-200 hover:text-red-500 transition-colors"><Trash size={14} /></button>
+                            </div>
+                         </div>
+                         {g.isExpanded && (
+                           <div className="px-3 pb-3 flex flex-col gap-1.5 border-t border-slate-50 pt-2">
+                             {g.subgroups.map(sg => (
+                               <div key={sg.id} className="relative group/sg flex items-center gap-1">
+                                 <button onClick={() => { setActiveGroupId(g.id); setActiveSubgroupId(sg.id); }} className={`flex-1 pl-7 pr-2 py-3 text-left text-xs font-black rounded-xl transition-all ${activeSubgroupId === sg.id ? 'bg-slate-900 text-white shadow-lg translate-x-1' : 'text-slate-400 hover:bg-slate-50'}`}>{sg.name}</button>
+                                 <button onClick={(e) => { e.stopPropagation(); setActiveGroupId(g.id); setModal({ show: true, type: 'renameSubgroup', title: '修改小组名称', value: sg.name, targetId: sg.id }); }} className={`p-1 rounded transition-all opacity-0 group-hover/sg:opacity-100 text-slate-300 hover:text-indigo-500 ${activeSubgroupId === sg.id ? 'text-slate-400 hover:text-indigo-300' : ''}`} title="重命名">
+                                   <Edit3 size={12} />
+                                 </button>
+                                 <button onClick={(e) => { e.stopPropagation(); setActiveGroupId(g.id); setModal({ show: true, type: 'deleteSubgroup', title: `删除小组「${sg.name}」？`, targetId: sg.id }); }} className={`p-1 rounded transition-all ${activeSubgroupId === sg.id ? 'text-slate-400 hover:text-red-400 hover:bg-slate-800/50' : 'opacity-0 group-hover/sg:opacity-100 text-slate-300 hover:text-red-500 hover:bg-slate-200/50'}`} title="删除小组">
+                                   <Trash size={14} />
+                                 </button>
+                               </div>
+                             ))}
+                             <button onClick={() => { setActiveGroupId(g.id); setModal({ show: true, type: 'addSubgroup', title: '添加小组', value: '' }); }} className="px-8 py-3 text-xs font-black text-slate-300 hover:text-indigo-600 flex items-center gap-2 transition-all mt-1 border border-dashed border-transparent hover:border-indigo-100 hover:bg-indigo-50/30 rounded-xl"><Plus size={14} /> 添加小组</button>
+                           </div>
+                         )}
+                       </div>
+                     ))}
+                   </div>
+                </aside>
+                <main className={`flex-1 min-w-0 ${activeSubgroup ? 'flex' : 'hidden'} lg:flex flex-col`}>
+                  <div className="bg-white rounded-[32px] shadow-2xl border border-slate-100 overflow-hidden flex-1 flex flex-col min-h-0">
+                    {activeSubgroup ? (
+                      <>
+                        <div className="px-5 lg:px-8 py-5 lg:py-8 flex flex-wrap justify-between items-center border-b border-slate-100 bg-slate-50/30 gap-4 lg:gap-6 shrink-0">
+                          <div className="flex items-center gap-3 lg:gap-5">
+                             {/* Back button - mobile only */}
+                             <button onClick={() => setActiveSubgroupId(null)} className="lg:hidden p-2 -ml-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-all" title="返回列表">
+                               <ArrowLeft size={20} />
+                             </button>
+                             <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-slate-100 to-slate-50 rounded-2xl flex items-center justify-center shadow-inner border border-slate-200/60 text-slate-700 shrink-0"><EquipmentCase size={22} /></div>
+                             <div className="min-w-0">
+                                <div className="flex items-center gap-3">
+                                  <h3 className="text-base lg:text-xl font-black text-slate-900 truncate">{activeSubgroup.name}</h3>
+                                </div>
+                                <p className="text-[11px] text-slate-400 font-black uppercase tracking-widest mt-1 flex items-center gap-2">
+                                  {activeGroup.name} <ChevronRight size={10} /> {activeSubgroup.name}
+                                </p>
+                             </div>
+                          </div>
+                          <div className="flex items-center gap-2 lg:gap-3">
+                             <button onClick={() => setModal({ show: true, type: 'resetSubgroup', title: `重置「${activeSubgroup.name}」所有数量？`, targetId: activeSubgroup.id })} className="px-3 lg:px-5 py-2.5 lg:py-3 bg-white text-orange-600 rounded-2xl border border-orange-100 hover:bg-orange-600 hover:text-white transition-all shadow-sm flex items-center gap-1.5 lg:gap-2 font-black text-[11px] lg:text-xs uppercase">
+                               <RefreshCw size={14} className="lg:hidden" /><RefreshCw size={16} className="hidden lg:inline" /> <span className="hidden sm:inline">清空</span><span className="hidden lg:inline">本组数量</span>
+                             </button>
+                             <button onClick={() => {
+                                const newId = 'it_' + Date.now();
+                                setGroups(groups => groups.map(g => g.id === activeGroupId ? { ...g, subgroups: g.subgroups.map(sg => sg.id === activeSubgroupId ? { ...sg, items: [...sg.items, { id: newId, name: '', model: '', count: 0, remark: '' }] } : sg) } : g));
+                             }} className="px-3 lg:px-6 py-2.5 lg:py-3 bg-slate-900 text-white rounded-2xl text-[11px] lg:text-xs font-black flex items-center gap-1.5 lg:gap-2 hover:bg-slate-800 transition-all shadow-xl shadow-slate-200"><Plus size={16} className="lg:hidden" /><Plus size={18} className="hidden lg:inline" /> <span className="hidden sm:inline">添加</span><span className="hidden lg:inline">设备</span></button>
+                          </div>
+                        </div>
+                        <div className="px-4 pb-4 pt-0 flex-1 overflow-auto hide-scrollbar relative">
+                          <table className="w-full text-left border-collapse">
+                            <thead className="sticky top-0 bg-white/95 backdrop-blur-xl z-10 shadow-[0_1px_0_0_#f8fafc]">
+                              <tr className="text-slate-400 text-[10px] lg:text-[11px] font-black uppercase tracking-[0.2em]">
+                                <th className="px-3 lg:px-6 py-4 lg:py-5">名称</th>
+                                <th className="px-2 lg:px-6 py-4 lg:py-5 hidden sm:table-cell">型号</th>
+                                <th className="px-2 lg:px-6 py-4 lg:py-5 text-center">数量</th>
+                                <th className="px-2 lg:px-6 py-4 lg:py-5 hidden md:table-cell">备注</th>
+                                <th className="w-10 lg:w-16"></th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-50/60">
+                              {activeSubgroup.items.map(item => (
+                                <tr key={item.id} data-item-id={item.id} className={`group hover:bg-slate-50/40 transition-colors ${highlightedItemId === item.id ? 'highlight-row' : ''}`}>
+                                  <td className="px-2 lg:px-4 py-3 lg:py-5"><input type="text" value={item.name} onChange={(e) => updateItem(item.id, 'name', e.target.value)} className="w-full px-2 lg:px-4 py-2 lg:py-3 bg-transparent border-none font-black text-[13px] lg:text-[14px] text-slate-800 outline-none focus:bg-white rounded-xl focus:ring-2 ring-slate-100" placeholder="器材名称..." /></td>
+                                  <td className="px-2 lg:px-4 py-3 lg:py-5 hidden sm:table-cell"><input type="text" value={item.model} onChange={(e) => updateItem(item.id, 'model', e.target.value)} className="w-full px-2 lg:px-4 py-2 lg:py-3 bg-transparent border-none text-xs text-slate-500 font-bold outline-none" placeholder="规格" /></td>
+                                  <td className="px-2 lg:px-6 py-3 lg:py-5">
+                                    <div className="flex items-center justify-center gap-1.5 lg:gap-2.5">
+                                      <button onClick={() => adjustCount(item.id, -1)} className="w-7 h-7 lg:w-9 lg:h-9 rounded-lg lg:rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-900 hover:text-white transition-all shadow-sm"><Minus size={12} className="lg:hidden" /><Minus size={14} className="hidden lg:inline" /></button>
+                                      <input type="number" value={item.count} onChange={(e) => updateItem(item.id, 'count', parseInt(e.target.value) || 0)} className="w-10 lg:w-14 text-center font-black text-sm bg-transparent border-none focus:ring-0" />
+                                      <button onClick={() => adjustCount(item.id, 1)} className="w-7 h-7 lg:w-9 lg:h-9 rounded-lg lg:rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-900 hover:text-white transition-all shadow-sm"><Plus size={12} className="lg:hidden" /><Plus size={14} className="hidden lg:inline" /></button>
+                                    </div>
+                                  </td>
+                                  <td className="px-2 lg:px-4 py-3 lg:py-5 hidden md:table-cell"><input type="text" value={item.remark} onChange={(e) => updateItem(item.id, 'remark', e.target.value)} className="w-full px-2 lg:px-4 py-2 lg:py-3 bg-transparent border-none text-xs text-slate-400 font-medium outline-none" placeholder="备注..." /></td>
+                                  <td className="px-1 lg:px-4 py-3 lg:py-5"><button onClick={() => setModal({ show: true, type: 'deleteItem', title: '永久删除此项？', extraData: { itemId: item.id } })} className="opacity-0 group-hover:opacity-100 p-1.5 lg:p-2 text-slate-200 hover:text-red-500 transition-all"><Trash2 size={16} className="lg:hidden" /><Trash2 size={18} className="hidden lg:inline" /></button></td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex-1 flex flex-col items-center justify-center text-slate-200 py-32 space-y-8 animate-pulse">
+                        <Boxes size={64} strokeWidth={1} />
+                        <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">选择一个器材小组进行管理</p>
+                      </div>
+                    )}
+                  </div>
+                </main>
+              </div>
+            )}
+
+            {/* Module: Preset */}
+            {activeModule === 'preset' && (
+              <div className="flex flex-col lg:flex-row gap-8 animate-in fade-in duration-500 min-h-[500px] lg:h-[calc(100vh-220px)]">
+                <aside className={`w-full lg:w-72 flex flex-col gap-5 shrink-0 ${activePresetId ? 'hidden' : 'flex'} lg:flex`}>
+                   <div className="flex items-center justify-between px-3">
+                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">模板中心</h3>
+                     <button onClick={() => setModal({ show: true, type: 'addPreset', title: '创建新模版', value: '' })} className="p-2 bg-white rounded-lg border border-slate-200 text-slate-600 hover:bg-indigo-600 hover:text-white transition-all shadow-sm"><Plus size={18} /></button>
+                   </div>
+                   <div className="space-y-3 overflow-y-auto pr-1 hide-scrollbar">
+                     {presets.map(p => (
+                       <button key={p.id} onClick={() => setActivePresetId(p.id)} className={`w-full px-5 py-5 rounded-2xl flex items-center justify-between font-black transition-all ${activePresetId === p.id ? 'bg-indigo-600 text-white shadow-xl translate-x-2' : 'bg-white border border-slate-100 text-slate-500 hover:bg-slate-50'}`}>
+                         <span className="truncate text-[14px]">{p.name}</span>
+                         <ArrowRight size={16} className={activePresetId === p.id ? 'opacity-100' : 'opacity-0 transition-all'} />
+                       </button>
+                     ))}
+                   </div>
+                </aside>
+                <main className={`flex-1 bg-white rounded-[32px] border border-slate-100 shadow-2xl ${activePresetId ? 'flex' : 'hidden'} lg:flex flex-col overflow-hidden`}>
+                  {currentPreset ? (
+                    <>
+                      <div className="px-5 lg:px-8 py-5 lg:py-7 flex flex-wrap justify-between items-center border-b border-slate-100 bg-slate-50/30 gap-4 lg:gap-6 shrink-0">
+                        <div className="flex items-center gap-3 lg:gap-4">
+                           {/* Back button - mobile only */}
+                           <button onClick={() => setActivePresetId(null)} className="lg:hidden p-2 -ml-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-all" title="返回列表">
+                             <ArrowLeft size={20} />
+                           </button>
+                           <h3 className="text-base lg:text-lg font-black text-slate-900">{currentPreset.name}</h3>
+                           <button onClick={() => setModal({ show: true, type: 'renamePreset', title: '修改名称', value: currentPreset.name, targetId: currentPreset.id })} className="p-2 text-slate-300 hover:text-indigo-600 transition-all"><Edit3 size={18} /></button>
+                        </div>
+                        <div className="flex items-center gap-2 lg:gap-3">
+                           <button onClick={() => applyPreset(currentPreset.id)} className="px-3 lg:px-6 py-2.5 lg:py-3 bg-green-600 text-white rounded-2xl text-[11px] lg:text-xs font-black flex items-center gap-1.5 lg:gap-2 hover:bg-green-700 transition-all shadow-lg shadow-green-100"><Save size={16} className="lg:hidden" /><Save size={18} className="hidden lg:inline" /> <span className="hidden sm:inline">应用</span><span className="hidden lg:inline">到当前库存</span></button>
+                           <button onClick={() => setModal({ show: true, type: 'deletePreset', title: `确认删除「${currentPreset.name}」？`, targetId: currentPreset.id })} className="p-2.5 lg:p-3.5 text-slate-300 hover:text-red-500 bg-slate-100/50 rounded-2xl transition-all"><Trash2 size={16} className="lg:hidden" /><Trash2 size={18} className="hidden lg:inline" /></button>
+                        </div>
+                      </div>
+                      <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
+                        <div className="w-full lg:w-5/12 border-b lg:border-b-0 lg:border-r border-slate-100 flex flex-col overflow-y-auto p-4 lg:p-5 space-y-4 lg:space-y-6 hide-scrollbar max-h-[40vh] lg:max-h-none">
+                          {groupedPresetItems.map(([cat, items]) => (
+                            <div key={cat} className="space-y-3">
+                              <h5 className="text-[11px] font-black text-slate-400 border-b border-slate-100 pb-2 uppercase">{cat}</h5>
+                              <div className="space-y-2">
+                                {items.map(it => (
+                                  <div key={it.id} className="bg-slate-50/80 rounded-2xl p-4 flex items-center justify-between border border-transparent hover:border-slate-200 hover:bg-white transition-all shadow-sm">
+                                    <div className="min-w-0 pr-2">
+                                      <p className="font-black text-slate-800 text-[13px] truncate">{it.name}</p>
+                                      <p className="text-[10px] text-slate-400 font-bold truncate mt-0.5">{it.model}</p>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                      <div className="flex items-center bg-white rounded-xl p-1 border border-slate-200">
+                                        <button onClick={() => updatePresetItemCount(it.id, -1)} className="w-7 h-7 flex items-center justify-center text-slate-400 rounded-lg hover:bg-slate-50"><Minus size={12} /></button>
+                                        <input type="number" value={it.presetCount} onChange={(e) => { const val = Math.max(0, parseInt(e.target.value) || 0); setPresets(presets => presets.map(p => p.id === activePresetId ? { ...p, items: p.items.map(i => i.itemId === it.id ? { ...i, count: val } : i) } : p)); }} className="w-10 text-center text-xs font-black bg-transparent border-none focus:ring-0" min="0" />
+                                        <button onClick={() => updatePresetItemCount(it.id, 1)} className="w-7 h-7 flex items-center justify-center text-slate-400 rounded-lg hover:bg-slate-50"><Plus size={12} /></button>
+                                      </div>
+                                      <button onClick={() => toggleItemInPreset(it.id)} className="p-1.5 text-slate-300 hover:text-red-500"><X size={16} /></button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="w-full lg:w-7/12 flex flex-col bg-slate-50/20 overflow-y-auto p-4 lg:p-6 space-y-4 hide-scrollbar max-h-[40vh] lg:max-h-none">
+                          {groups.map(g => (
+                            <div key={g.id} className="bg-white rounded-2xl border border-slate-100 p-4 space-y-4">
+                              <button onClick={() => toggleGroupExpand(g.id)} className="w-full flex items-center justify-between font-black text-sm text-slate-800">
+                                {g.name} {g.isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                              </button>
+                              {g.isExpanded && g.subgroups.map(sg => (
+                                <div key={sg.id} className="pl-4 space-y-3">
+                                  <h6 className="text-xs font-black text-slate-400">{sg.name}</h6>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {sg.items.map(item => {
+                                      const isIn = currentPreset.items.some(pi => pi.itemId === item.id);
+                                      return (
+                                        <button key={item.id} onClick={() => toggleItemInPreset(item.id)} className={`flex items-center justify-between p-4 rounded-2xl border text-left transition-all ${isIn ? 'bg-indigo-50 border-indigo-200' : 'bg-white border-slate-100 hover:border-slate-300'}`}>
+                                          <div className="min-w-0 pr-2">
+                                            <p className={`text-[13px] font-black truncate ${isIn ? 'text-indigo-700' : 'text-slate-800'}`}>{item.name}</p>
+                                          </div>
+                                          {isIn ? <CheckCircle2 size={16} className="text-indigo-600" /> : <Plus size={16} className="text-slate-200" />}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex-1 flex flex-col items-center justify-center text-slate-200 p-12">
+                       <Boxes size={64} strokeWidth={1} className="mb-4" />
+                       <p className="text-xs font-black uppercase tracking-widest text-slate-400">选择一个模板开始配置</p>
+                    </div>
+                  )}
+                </main>
+              </div>
+            )}
+
+            {/* Module: Manifest */}
+            {activeModule === 'manifest' && (
+              <div className="space-y-8 animate-in fade-in duration-500">
+                <div className="bg-slate-900 rounded-[24px] lg:rounded-[32px] p-5 lg:p-6 text-white shadow-2xl relative overflow-hidden border border-slate-800">
+                  <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none"><Film size={120} /></div>
+                  <div className="relative z-10 flex flex-col lg:flex-row items-stretch lg:items-center gap-5 lg:gap-6">
+                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-5">
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] ml-1">项目名称</label>
+                        <div className="relative">
+                          <Edit3 size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" />
+                          <input type="text" value={projectInfo.name} onChange={(e) => setProjectInfo({...projectInfo, name: e.target.value})} className="w-full bg-slate-800/60 border border-slate-700/50 rounded-xl pl-12 pr-4 py-3 text-sm font-bold outline-none focus:ring-2 ring-green-500/30 transition-all placeholder:text-slate-700" placeholder="项目全称" />
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] ml-1">拍摄地点</label>
+                        <div className="relative">
+                          <MapPin size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" />
+                          <input type="text" value={projectInfo.location} onChange={(e) => setProjectInfo({...projectInfo, location: e.target.value})} className="w-full bg-slate-800/60 border border-slate-700/50 rounded-xl pl-12 pr-4 py-3 text-sm font-bold outline-none focus:ring-2 ring-green-500/30 transition-all placeholder:text-slate-700" placeholder="拍摄地点" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5 lg:min-w-[280px]">
+                      <label className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] ml-1">拍摄周期</label>
+                      <div className="flex items-center gap-3 bg-slate-800/60 border border-slate-700/50 rounded-xl px-4 py-3">
+                        <div className="flex-1 flex items-center gap-2">
+                          <Calendar size={14} className="text-slate-600 shrink-0" />
+                          <input type="date" value={projectInfo.startDate} onChange={(e) => setProjectInfo({...projectInfo, startDate: e.target.value})} className="bg-transparent border-none w-full min-w-0 outline-none [color-scheme:dark] text-xs font-black uppercase cursor-pointer" />
+                        </div>
+                        <div className="w-px h-5 bg-slate-700 shrink-0"></div>
+                        <div className="flex-1 flex items-center gap-2">
+                          <Calendar size={14} className="text-slate-600 shrink-0" />
+                          <input type="date" value={projectInfo.endDate} onChange={(e) => setProjectInfo({...projectInfo, endDate: e.target.value})} className="bg-transparent border-none w-full min-w-0 outline-none [color-scheme:dark] text-xs font-black uppercase cursor-pointer" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-6 lg:gap-8 lg:pl-6 lg:border-l border-slate-800">
+                      <div className="text-center">
+                        <p className="text-[9px] lg:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">天数</p>
+                        <p className="text-2xl lg:text-3xl font-black text-white font-mono">{calculateDays()}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[9px] lg:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">件数</p>
+                        <p className="text-2xl lg:text-3xl font-black text-green-500 font-mono leading-none">
+                          {selectedItemsManifest.reduce((acc, g) => acc + g.subgroups.reduce((sacc, sg) => sacc + sg.items.reduce((iacc, it) => iacc + it.count, 0), 0), 0)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-[40px] shadow-2xl border border-slate-100 overflow-hidden">
+                  <div className="p-10 border-b border-slate-50 flex flex-col md:flex-row justify-between items-center bg-slate-50/30 gap-6">
+                    <div>
+                       <h2 className="text-2xl font-black text-slate-900 tracking-tight">最终出库清单</h2>
+                       <p className="text-xs text-slate-400 font-bold mt-1 uppercase tracking-widest">Verify and Copy your list</p>
+                    </div>
+                    <div className="flex gap-4">
+                      <button onClick={handleCopyManifest} className="px-8 py-4 bg-slate-900 text-white rounded-2xl text-sm font-black flex items-center gap-3 hover:bg-slate-800 shadow-xl shadow-slate-200 transition-all"><Copy size={20} /> 复制文本清单</button>
+                    </div>
+                  </div>
+                  <div className="p-10">
+                    {selectedItemsManifest.length === 0 ? (
+                      <div className="py-32 text-center flex flex-col items-center gap-6 opacity-30">
+                         <ClipboardList size={80} strokeWidth={1} />
+                         <p className="font-black text-xs uppercase tracking-[0.4em]">请在仓库中标记出库设备数量</p>
+                      </div>
+                    ) : (
+                      <div className="columns-1 md:columns-2 gap-x-6 lg:gap-x-10">
+                        {selectedItemsManifest.map(g => (
+                          <div key={g.id} className="break-inside-avoid mb-6 lg:mb-10 space-y-6 bg-slate-50/40 p-6 rounded-[32px] border border-slate-50">
+                            <div className="flex items-center gap-4 border-b border-slate-100 pb-3">
+                               <div className="w-2 h-6 bg-slate-900 rounded-full"></div>
+                               <span className="text-sm font-black uppercase tracking-[0.2em] text-slate-900">{g.name}</span>
+                            </div>
+                            <div className="space-y-6">
+                              {g.subgroups.map(sg => (
+                                <div key={sg.id} className="space-y-3">
+                                  <h5 className="text-[11px] font-black text-slate-400 px-2 uppercase tracking-widest flex items-center gap-2">
+                                    <ChevronRight size={12} className="text-slate-300" />{sg.name}
+                                  </h5>
+                                  <div className="space-y-2">
+                                    {sg.items.map(it => (
+                                      <div key={it.id} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                                        <div className="min-w-0 pr-4">
+                                          <p className="font-black text-slate-900 text-[13px] truncate">{it.name}</p>
+                                          {it.model && <p className="text-[10px] text-slate-400 mt-0.5 truncate">{it.model}</p>}
+                                        </div>
+                                        <div className="shrink-0 flex items-center gap-2">
+                                          <div className="px-3 py-1 bg-slate-900 text-white rounded-lg text-[11px] font-black font-mono">× {it.count}</div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Global Modal */}
+          {modal.show && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+              <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-xl animate-in fade-in" onClick={() => setModal(m => ({...m, show: false}))}></div>
+              <div className="relative bg-white rounded-[32px] lg:rounded-[40px] shadow-2xl w-full max-w-md mx-4 lg:mx-0 p-8 lg:p-12 animate-in zoom-in border border-slate-100">
+                <h2 className="text-2xl font-black text-slate-900 mb-6 tracking-tight">{modal.title}</h2>
+                {(modal.type.includes('add') || modal.type.includes('rename')) ? (
+                  <input autoFocus type="text" value={modal.value} onChange={(e) => setModal(m => ({...m, value: e.target.value}))} onKeyDown={(e) => e.key === 'Enter' && handleModalConfirm()} className="w-full px-6 py-5 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-slate-900 outline-none font-black text-sm mb-8 transition-all" placeholder="在此输入名称..." />
+                ) : (
+                  <div className="mb-8 p-6 bg-red-50/50 rounded-2xl text-red-700 text-sm flex gap-4 font-bold border border-red-100 shadow-sm">
+                    <AlertCircle size={24} className="shrink-0" />
+                    <p>确认执行此清理操作吗？对应的设备出库数量将清零。</p>
+                  </div>
+                )}
+                <div className="flex gap-4">
+                  <button onClick={() => setModal(m => ({...m, show: false}))} className="flex-1 px-4 py-5 rounded-2xl bg-slate-100 text-slate-500 font-black text-xs hover:bg-slate-200 transition-all uppercase tracking-widest">取消</button>
+                  <button onClick={handleModalConfirm} className={`flex-1 px-4 py-5 rounded-2xl text-white font-black text-xs shadow-xl transition-all uppercase tracking-widest ${modal.type.includes('delete') || modal.type.includes('Reset') || modal.type.includes('reset') ? 'bg-red-500 hover:bg-red-600 shadow-red-200' : 'bg-slate-900 hover:bg-slate-800 shadow-slate-200'}`}>确认执行</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Version History Panel */}
+          {versionPanelOpen && (
+            <div className="fixed inset-0 z-[110] flex justify-end">
+              <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm animate-in fade-in" onClick={() => { setVersionPanelOpen(false); setRestoreConfirm(null); }}></div>
+              <div className="relative w-full lg:max-w-lg bg-white h-full shadow-2xl animate-in slide-in-from-right duration-500 flex flex-col">
+                <div className="p-8 border-b border-slate-100 flex items-center justify-between shrink-0">
+                  <div>
+                    <h2 className="text-xl font-black text-slate-900">版本记录</h2>
+                    <p className="text-xs text-slate-400 font-bold mt-0.5">共 {versions.length} 个版本（最多{MAX_VERSIONS}个）</p>
+                  </div>
+                  <button onClick={() => { setVersionPanelOpen(false); setRestoreConfirm(null); }} className="p-3 bg-slate-100 rounded-2xl text-slate-500 hover:bg-slate-200 transition-all"><X size={20} /></button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                  {versions.length === 0 ? (
+                    <div className="py-20 text-center text-slate-300">
+                      <History size={48} strokeWidth={1} className="mx-auto mb-4" />
+                      <p className="text-xs font-black uppercase tracking-widest">暂无版本记录</p>
+                      <p className="text-[11px] text-slate-300 mt-2">进行修改操作后会自动保存版本</p>
+                    </div>
+                  ) : (
+                    versions.map(v => (
+                      <div key={v.id} className={`bg-slate-50 rounded-2xl p-5 border transition-all ${restoreConfirm === v.id ? 'border-indigo-400 ring-2 ring-indigo-100' : 'border-slate-100 hover:border-slate-200'}`}>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-black text-slate-800 text-sm">{v.label}</p>
+                            <p className="text-[11px] text-slate-400 font-bold mt-1">{fmtTime(v.time)}</p>
+                            <p className="text-[10px] text-slate-300 mt-0.5">
+                              {v.groups.length} 大组 · {v.groups.reduce((a,g) => a + g.subgroups.reduce((b,sg) => b + sg.items.length, 0), 0)} 设备 · {v.presets.length} 预设
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {restoreConfirm === v.id ? (
+                              <>
+                                <button onClick={() => restoreVersion(v)} className="px-3 py-2 bg-indigo-600 text-white rounded-xl text-xs font-black hover:bg-indigo-700 transition-all">确认恢复</button>
+                                <button onClick={() => setRestoreConfirm(null)} className="px-3 py-2 bg-slate-200 text-slate-500 rounded-xl text-xs font-black hover:bg-slate-300 transition-all">取消</button>
+                              </>
+                            ) : (
+                              <>
+                                <button onClick={() => setRestoreConfirm(v.id)} className="px-3 py-2 bg-white text-indigo-600 rounded-xl text-xs font-black border border-indigo-200 hover:bg-indigo-50 transition-all">恢复</button>
+                                <button onClick={(e) => handleDeleteVersion(e, v.id)} className="p-2 text-slate-300 hover:text-red-500 transition-all"><Trash2 size={14} /></button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        {restoreConfirm === v.id && (
+                          <p className="mt-3 text-xs text-indigo-600 font-bold bg-indigo-50 rounded-xl p-3">确认恢复到该版本？当前数据将被替换为此版本的状态。</p>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+                {versions.length > 0 && (
+                  <div className="p-6 border-t border-slate-100 shrink-0">
+                    <button onClick={handleClearVersions} className="w-full px-4 py-4 bg-red-50 text-red-500 rounded-2xl text-xs font-black hover:bg-red-100 transition-all uppercase tracking-widest">清除所有版本记录</button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Toast */}
+          {toast.show && (
+            <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[120] animate-in slide-in-from-bottom-12 duration-500">
+              <div className="bg-slate-900/90 text-white px-10 py-5 rounded-full shadow-2xl flex items-center gap-4 font-black text-[13px] border border-slate-700/50 backdrop-blur-2xl">
+                <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                {toast.message}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
