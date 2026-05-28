@@ -203,21 +203,24 @@
         }).catch(() => {});
       }, []);
 
-      // Listen for remote changes from other users
+      // Poll Firestore for remote changes from other users
       useEffect(() => {
         if (loading) return;
-        const unsub = cloudDoc.onSnapshot(doc => {
-          if (!doc.exists || !doc.data().groups) return;
-          const d = doc.data();
-          const remoteJson = JSON.stringify({ g: d.groups, p: d.presets || defaultPresets, pi: d.projectInfo || {} });
-          const localJson = JSON.stringify({ g: stateRef.current.groups, p: stateRef.current.presets, pi: stateRef.current.projectInfo });
-          if (remoteJson !== localJson) {
-            setGroups(d.groups);
-            setPresets(d.presets || defaultPresets);
-            setProjectInfo(d.projectInfo || { name: '', startDate: '', endDate: '', location: '' });
-          }
-        });
-        return () => unsub();
+        const interval = setInterval(async () => {
+          try {
+            const doc = await cloudDoc.get();
+            if (!doc.exists || !doc.data().groups) return;
+            const d = doc.data();
+            const remoteJson = JSON.stringify({ g: d.groups, p: d.presets || defaultPresets, pi: d.projectInfo || {} });
+            const localJson = JSON.stringify({ g: stateRef.current.groups, p: stateRef.current.presets, pi: stateRef.current.projectInfo });
+            if (remoteJson !== localJson) {
+              setGroups(d.groups);
+              setPresets(d.presets || defaultPresets);
+              setProjectInfo(d.projectInfo || { name: '', startDate: '', endDate: '', location: '' });
+            }
+          } catch(e) {}
+        }, 2000);
+        return () => clearInterval(interval);
       }, [loading]);
 
       // Save to Firestore + localStorage whenever data changes
