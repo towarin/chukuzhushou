@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>出库助手</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <style>
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
@@ -76,6 +78,20 @@
     const ArrowLeft = svgIcon(<><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></>);
 
 
+    // ── Firebase init ──
+    const firebaseConfig = {
+      apiKey: "AIzaSyA_WUGpfxardERpd_uFjZP3S06F5jPKQCc",
+      authDomain: "project-2640635398710702305.firebaseapp.com",
+      projectId: "project-2640635398710702305",
+      storageBucket: "project-2640635398710702305.firebasestorage.app",
+      messagingSenderId: "306768641295",
+      appId: "1:306768641295:web:c957079d05b68bd02dd27a"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const cloudDoc = db.collection('data').doc('main');
+    const versionsCol = db.collection('data').doc('main').collection('versions');
+
     // ── Storage keys ──
     const STORAGE_KEY = 'zhushi_equipment_data_v2';
     const VERSIONS_KEY = 'zhushi_versions_v2';
@@ -119,9 +135,6 @@
       } catch (e) { return []; }
     };
 
-    const saved = loadState();
-    const savedVersions = loadVersions();
-
     // ── Helpers ──
     const fmtTime = (iso) => {
       const d = new Date(iso);
@@ -131,18 +144,19 @@
 
     // ── App ──
     const App = () => {
-      const [groups, setGroups] = useState(saved.groups);
-      const [presets, setPresets] = useState(saved.presets);
-      const [projectInfo, setProjectInfo] = useState(saved.projectInfo);
+      const [groups, setGroups] = useState(defaultGroups);
+      const [presets, setPresets] = useState(defaultPresets);
+      const [projectInfo, setProjectInfo] = useState({ name: '', startDate: '', endDate: '', location: '' });
+      const [loading, setLoading] = useState(true);
 
       const [activePresetId, setActivePresetId] = useState(null);
       const [activeModule, setActiveModule] = useState('inventory');
-      const [activeGroupId, setActiveGroupId] = useState(saved.groups[0]?.id || 'g1');
-      const [activeSubgroupId, setActiveSubgroupId] = useState(saved.groups[0]?.subgroups[0]?.id || 'sg1');
+      const [activeGroupId, setActiveGroupId] = useState(defaultGroups[0]?.id || 'g1');
+      const [activeSubgroupId, setActiveSubgroupId] = useState(defaultGroups[0]?.subgroups[0]?.id || 'sg1');
 
       const [modal, setModal] = useState({ show: false, type: '', title: '', value: '', targetId: null, extraData: null });
       const [toast, setToast] = useState({ show: false, message: '' });
-      const [versions, setVersions] = useState(savedVersions);
+      const [versions, setVersions] = useState([]);
       const [versionPanelOpen, setVersionPanelOpen] = useState(false);
       const [searchQuery, setSearchQuery] = useState('');
       const [showSearchDropdown, setShowSearchDropdown] = useState(false);
@@ -154,10 +168,79 @@
       const stateRef = useRef({ groups, presets, projectInfo });
       useEffect(() => { stateRef.current = { groups, presets, projectInfo }; }, [groups, presets, projectInfo]);
 
-      // Save to localStorage whenever data changes
+      // Load from Firestore on mount (with localStorage fallback)
       useEffect(() => {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ groups, presets, projectInfo }));
-      }, [groups, presets, projectInfo]);
+        cloudDoc.get().then(doc => {
+          if (doc.exists && doc.data().groups) {
+            const d = doc.data();
+            setGroups(d.groups);
+            setPresets(d.presets || defaultPresets);
+            setProjectInfo(d.projectInfo || { name: '', startDate: '', endDate: '', location: '' });
+            if (d.groups[0]?.id) setActiveGroupId(d.groups[0].id);
+            if (d.groups[0]?.subgroups[0]?.id) setActiveSubgroupId(d.groups[0].subgroups[0].id);
+          } else {
+            // Fallback to localStorage
+            const saved = loadState();
+            setGroups(saved.groups);
+            setPresets(saved.presets);
+            setProjectInfo(saved.projectInfo);
+            if (saved.groups[0]?.id) setActiveGroupId(saved.groups[0].id);
+            if (saved.groups[0]?.subgroups[0]?.id) setActiveSubgroupId(saved.groups[0].subgroups[0].id);
+          }
+          setLoading(false);
+        }).catch(() => {
+          const saved = loadState();
+          setGroups(saved.groups);
+          setPresets(saved.presets);
+          setProjectInfo(saved.projectInfo);
+          setLoading(false);
+        });
+
+        // Load versions from Firestore
+        versionsCol.orderBy('time', 'desc').limit(MAX_VERSIONS).get().then(snap => {
+          const vs = snap.docs.map(d => ({ id: parseInt(d.id), ...d.data() }));
+          setVersions(vs);
+        }).catch(() => {});
+      }, []);
+
+      // Listen for remote changes from other users
+      useEffect(() => {
+        const unsub = cloudDoc.onSnapshot(doc => {
+          if (!doc.exists || !doc.data().groups || loading) return;
+          const d = doc.data();
+          const remoteJson = JSON.stringify({ g: d.groups, p: d.presets || defaultPresets, pi: d.projectInfo || {} });
+          const localJson = JSON.stringify({ g: groups, p: presets, pi: projectInfo });
+          if (remoteJson !== localJson) {
+            setGroups(d.groups);
+            setPresets(d.presets || defaultPresets);
+            setProjectInfo(d.projectInfo || { name: '', startDate: '', endDate: '', location: '' });
+          }
+        });
+        return () => unsub();
+      }, [groups, presets, projectInfo, loading]);
+
+      // Save to Firestore + localStorage whenever data changes
+      useEffect(() => {
+        if (loading) return;
+        const data = { groups, presets, projectInfo, updatedAt: new Date().toISOString() };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        cloudDoc.set(data).catch(() => {});
+      }, [groups, presets, projectInfo, loading]);
+
+      // Save versions to Firestore
+      const syncVersions = useCallback((newVersions) => {
+        localStorage.setItem(VERSIONS_KEY, JSON.stringify(newVersions));
+        // Wipe and rebuild versions in Firestore
+        versionsCol.get().then(snap => {
+          const batch = db.batch();
+          snap.docs.forEach(d => batch.delete(d.ref));
+          newVersions.forEach(v => {
+            const ref = versionsCol.doc(String(v.id));
+            batch.set(ref, { time: v.time, label: v.label, groups: v.groups, presets: v.presets, projectInfo: v.projectInfo });
+          });
+          batch.commit().catch(() => {});
+        }).catch(() => {});
+      }, []);
 
       const showToast = useCallback((message) => {
         setToast({ show: true, message });
@@ -169,10 +252,10 @@
         const v = { id: Date.now(), time: new Date().toISOString(), label, groups: JSON.parse(JSON.stringify(g)), presets: JSON.parse(JSON.stringify(p)), projectInfo: { ...pi } };
         setVersions(prev => {
           const next = [v, ...prev].slice(0, MAX_VERSIONS);
-          localStorage.setItem(VERSIONS_KEY, JSON.stringify(next));
+          syncVersions(next);
           return next;
         });
-      }, []);
+      }, [syncVersions]);
 
       const restoreVersion = useCallback((v) => {
         setGroups(JSON.parse(JSON.stringify(v.groups)));
@@ -454,19 +537,28 @@
         e.stopPropagation();
         setVersions(prev => {
           const next = prev.filter(v => v.id !== vid);
-          localStorage.setItem(VERSIONS_KEY, JSON.stringify(next));
+          syncVersions(next);
           return next;
         });
-      }, []);
+      }, [syncVersions]);
 
       const handleClearVersions = useCallback(() => {
         setVersions([]);
-        localStorage.removeItem(VERSIONS_KEY);
+        syncVersions([]);
         showToast('所有版本记录已清除');
-      }, [showToast]);
+      }, [showToast, syncVersions]);
 
       return (
         <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-800 pb-24">
+          {/* Loading overlay */}
+          {loading && (
+            <div className="fixed inset-0 z-[200] bg-slate-50 flex items-center justify-center">
+              <div className="text-center space-y-4">
+                <div className="w-12 h-12 mx-auto border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin"></div>
+                <p className="text-sm font-black text-slate-400 uppercase tracking-widest">加载中...</p>
+              </div>
+            </div>
+          )}
           <div className="max-w-7xl mx-auto">
             {/* Header */}
             <header className="mb-6 lg:mb-8 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
