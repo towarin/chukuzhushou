@@ -173,6 +173,7 @@
         cloudDoc.get().then(doc => {
           if (doc.exists && doc.data().groups) {
             const d = doc.data();
+            cloudVerRef.current = d._ver || 0;
             setGroups(d.groups);
             setPresets(d.presets || defaultPresets);
             setProjectInfo(d.projectInfo || { name: '', startDate: '', endDate: '', location: '' });
@@ -225,8 +226,11 @@
       }, [loading]);
 
       // Save to Firestore + localStorage whenever data changes
+      const skipSaveRef = useRef(true);
       useEffect(() => {
         if (loading) return;
+        // Skip the first save triggered by initial load (data was just loaded, no user change)
+        if (skipSaveRef.current) { skipSaveRef.current = false; return; }
         const ver = Date.now();
         cloudVerRef.current = ver;
         const data = { groups, presets, projectInfo, _ver: ver };
