@@ -204,6 +204,7 @@
       }, []);
 
       // Poll Firestore for remote changes from other users
+      const cloudVerRef = useRef(0);
       useEffect(() => {
         if (loading) return;
         const interval = setInterval(async () => {
@@ -211,9 +212,9 @@
             const doc = await cloudDoc.get();
             if (!doc.exists || !doc.data().groups) return;
             const d = doc.data();
-            const remoteJson = JSON.stringify({ g: d.groups, p: d.presets || defaultPresets, pi: d.projectInfo || {} });
-            const localJson = JSON.stringify({ g: stateRef.current.groups, p: stateRef.current.presets, pi: stateRef.current.projectInfo });
-            if (remoteJson !== localJson) {
+            const ver = d._ver || 0;
+            if (ver !== cloudVerRef.current) {
+              cloudVerRef.current = ver;
               setGroups(d.groups);
               setPresets(d.presets || defaultPresets);
               setProjectInfo(d.projectInfo || { name: '', startDate: '', endDate: '', location: '' });
@@ -226,7 +227,9 @@
       // Save to Firestore + localStorage whenever data changes
       useEffect(() => {
         if (loading) return;
-        const data = { groups, presets, projectInfo, updatedAt: new Date().toISOString() };
+        const ver = Date.now();
+        cloudVerRef.current = ver;
+        const data = { groups, presets, projectInfo, _ver: ver };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         cloudDoc.set(data).catch(() => {});
       }, [groups, presets, projectInfo, loading]);
