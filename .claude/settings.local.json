@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m http.server 8080)",
+      "Bash(grep -iv '.html$')",
+      "Bash(python3 -c ' *)"
+    ]
+  }
+}
