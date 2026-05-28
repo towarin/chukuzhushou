@@ -205,11 +205,12 @@
 
       // Listen for remote changes from other users
       useEffect(() => {
+        if (loading) return;
         const unsub = cloudDoc.onSnapshot(doc => {
-          if (!doc.exists || !doc.data().groups || loading) return;
+          if (!doc.exists || !doc.data().groups) return;
           const d = doc.data();
           const remoteJson = JSON.stringify({ g: d.groups, p: d.presets || defaultPresets, pi: d.projectInfo || {} });
-          const localJson = JSON.stringify({ g: groups, p: presets, pi: projectInfo });
+          const localJson = JSON.stringify({ g: stateRef.current.groups, p: stateRef.current.presets, pi: stateRef.current.projectInfo });
           if (remoteJson !== localJson) {
             setGroups(d.groups);
             setPresets(d.presets || defaultPresets);
@@ -217,7 +218,7 @@
           }
         });
         return () => unsub();
-      }, [groups, presets, projectInfo, loading]);
+      }, [loading]);
 
       // Save to Firestore + localStorage whenever data changes
       useEffect(() => {
