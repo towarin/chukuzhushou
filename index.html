@@ -207,24 +207,33 @@
       // Poll Firestore for remote changes from other users
       const cloudVerRef = useRef(0);
       const isRemoteUpdate = useRef(false);
+      // Poll with recursive setTimeout (more reliable on mobile than setInterval)
       useEffect(() => {
         if (loading) return;
-        const interval = setInterval(async () => {
+        let active = true;
+        const poll = async () => {
+          if (!active) return;
           try {
             const doc = await cloudDoc.get();
-            if (!doc.exists || !doc.data().groups) return;
-            const d = doc.data();
-            const ver = d._ver || 0;
-            if (ver !== cloudVerRef.current) {
-              cloudVerRef.current = ver;
-              isRemoteUpdate.current = true;
-              setGroups(d.groups);
-              setPresets(d.presets || defaultPresets);
-              setProjectInfo(d.projectInfo || { name: '', startDate: '', endDate: '', location: '' });
+            if (active && doc.exists && doc.data().groups) {
+              const d = doc.data();
+              const ver = d._ver || 0;
+              if (ver !== cloudVerRef.current) {
+                cloudVerRef.current = ver;
+                isRemoteUpdate.current = true;
+                setGroups(d.groups);
+                setPresets(d.presets || defaultPresets);
+                setProjectInfo(d.projectInfo || { name: '', startDate: '', endDate: '', location: '' });
+              }
             }
           } catch(e) {}
-        }, 2000);
-        return () => clearInterval(interval);
+          if (active) setTimeout(poll, 2000);
+        };
+        poll();
+        // Re-sync immediately when tab becomes visible (mobile browsers throttle background tabs)
+        const onVisible = () => { if (document.visibilityState === 'visible') poll(); };
+        document.addEventListener('visibilitychange', onVisible);
+        return () => { active = false; document.removeEventListener('visibilitychange', onVisible); };
       }, [loading]);
 
       // Save to Firestore + localStorage whenever data changes (user actions only)
