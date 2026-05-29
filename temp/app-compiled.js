@@ -1,0 +1,1943 @@
+function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+const {
+  useState,
+  useMemo,
+  useEffect,
+  useCallback,
+  useRef
+} = React;
+
+// ── Icon components ──
+const svgIcon = d => ({
+  size = 24,
+  ...props
+}) => /*#__PURE__*/React.createElement("svg", _extends({
+  width: size,
+  height: size,
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2,
+  strokeLinecap: "round",
+  strokeLinejoin: "round"
+}, props), d);
+const Plus = svgIcon(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("line", {
+  x1: "12",
+  y1: "5",
+  x2: "12",
+  y2: "19"
+}), /*#__PURE__*/React.createElement("line", {
+  x1: "5",
+  y1: "12",
+  x2: "19",
+  y2: "12"
+})));
+const Minus = svgIcon(/*#__PURE__*/React.createElement("line", {
+  x1: "5",
+  y1: "12",
+  x2: "19",
+  y2: "12"
+}));
+const X = svgIcon(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("line", {
+  x1: "18",
+  y1: "6",
+  x2: "6",
+  y2: "18"
+}), /*#__PURE__*/React.createElement("line", {
+  x1: "6",
+  y1: "6",
+  x2: "18",
+  y2: "18"
+})));
+const ChevronDown = svgIcon(/*#__PURE__*/React.createElement("polyline", {
+  points: "6 9 12 15 18 9"
+}));
+const ChevronRight = svgIcon(/*#__PURE__*/React.createElement("polyline", {
+  points: "9 18 15 12 9 6"
+}));
+const ArrowRight = svgIcon(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("line", {
+  x1: "5",
+  y1: "12",
+  x2: "19",
+  y2: "12"
+}), /*#__PURE__*/React.createElement("polyline", {
+  points: "12 5 19 12 12 19"
+})));
+const CheckCircle2 = svgIcon(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
+  cx: "12",
+  cy: "12",
+  r: "10"
+}), /*#__PURE__*/React.createElement("polyline", {
+  points: "9 12 11 14 15 10"
+})));
+const AlertCircle = svgIcon(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
+  cx: "12",
+  cy: "12",
+  r: "10"
+}), /*#__PURE__*/React.createElement("line", {
+  x1: "12",
+  y1: "8",
+  x2: "12",
+  y2: "12"
+}), /*#__PURE__*/React.createElement("line", {
+  x1: "12",
+  y1: "16",
+  x2: "12.01",
+  y2: "16"
+})));
+const Copy = svgIcon(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
+  x: "9",
+  y: "9",
+  width: "13",
+  height: "13",
+  rx: "2",
+  ry: "2"
+}), /*#__PURE__*/React.createElement("path", {
+  d: "M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
+})));
+const Film = svgIcon(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
+  x: "2",
+  y: "2",
+  width: "20",
+  height: "20",
+  rx: "2.18",
+  ry: "2.18"
+}), /*#__PURE__*/React.createElement("line", {
+  x1: "7",
+  y1: "2",
+  x2: "7",
+  y2: "22"
+}), /*#__PURE__*/React.createElement("line", {
+  x1: "17",
+  y1: "2",
+  x2: "17",
+  y2: "22"
+}), /*#__PURE__*/React.createElement("line", {
+  x1: "2",
+  y1: "12",
+  x2: "22",
+  y2: "12"
+}), /*#__PURE__*/React.createElement("line", {
+  x1: "2",
+  y1: "7",
+  x2: "7",
+  y2: "7"
+}), /*#__PURE__*/React.createElement("line", {
+  x1: "2",
+  y1: "17",
+  x2: "7",
+  y2: "17"
+}), /*#__PURE__*/React.createElement("line", {
+  x1: "17",
+  y1: "7",
+  x2: "22",
+  y2: "7"
+}), /*#__PURE__*/React.createElement("line", {
+  x1: "17",
+  y1: "17",
+  x2: "22",
+  y2: "17"
+})));
+const LayoutDashboard = svgIcon(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
+  x: "3",
+  y: "3",
+  width: "7",
+  height: "9",
+  rx: "1"
+}), /*#__PURE__*/React.createElement("rect", {
+  x: "14",
+  y: "3",
+  width: "7",
+  height: "5",
+  rx: "1"
+}), /*#__PURE__*/React.createElement("rect", {
+  x: "14",
+  y: "12",
+  width: "7",
+  height: "9",
+  rx: "1"
+}), /*#__PURE__*/React.createElement("rect", {
+  x: "3",
+  y: "16",
+  width: "7",
+  height: "5",
+  rx: "1"
+})));
+const ClipboardList = svgIcon(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
+  x: "8",
+  y: "2",
+  width: "8",
+  height: "4",
+  rx: "1",
+  ry: "1"
+}), /*#__PURE__*/React.createElement("path", {
+  d: "M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"
+}), /*#__PURE__*/React.createElement("line", {
+  x1: "10",
+  y1: "11",
+  x2: "14",
+  y2: "11"
+}), /*#__PURE__*/React.createElement("line", {
+  x1: "10",
+  y1: "15",
+  x2: "14",
+  y2: "15"
+})));
+const Boxes = svgIcon(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+  d: "M2.97 12.92A2 2 0 002 14.63v3.24a2 2 0 00.97 1.71l3 1.8a2 2 0 002.06 0L12 19v-5.5l-5-3-4.03 2.42z"
+}), /*#__PURE__*/React.createElement("path", {
+  d: "M7 16.5l5 3 4.97-2.92A2 2 0 0018 14.87v-3.24a2 2 0 00-.97-1.71l-3-1.8a2 2 0 00-2.06 0L7 11v5.5z"
+}), /*#__PURE__*/React.createElement("path", {
+  d: "M7 11l5-3 5 3"
+})));
+const Save = svgIcon(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+  d: "M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"
+}), /*#__PURE__*/React.createElement("polyline", {
+  points: "17 21 17 13 7 13 7 21"
+}), /*#__PURE__*/React.createElement("polyline", {
+  points: "7 3 7 8 15 8"
+})));
+const Edit3 = svgIcon(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+  d: "M12 20h9"
+}), /*#__PURE__*/React.createElement("path", {
+  d: "M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"
+})));
+const MapPin = svgIcon(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+  d: "M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"
+}), /*#__PURE__*/React.createElement("circle", {
+  cx: "12",
+  cy: "10",
+  r: "3"
+})));
+const RefreshCw = svgIcon(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("polyline", {
+  points: "23 4 23 10 17 10"
+}), /*#__PURE__*/React.createElement("polyline", {
+  points: "1 20 1 14 7 14"
+}), /*#__PURE__*/React.createElement("path", {
+  d: "M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"
+})));
+const RotateCcw = svgIcon(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("polyline", {
+  points: "1 4 1 10 7 10"
+}), /*#__PURE__*/React.createElement("path", {
+  d: "M3.51 15a9 9 0 018.08-3.78A9 9 0 0120.49 15"
+})));
+const Calendar = svgIcon(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
+  x: "3",
+  y: "4",
+  width: "18",
+  height: "18",
+  rx: "2",
+  ry: "2"
+}), /*#__PURE__*/React.createElement("line", {
+  x1: "16",
+  y1: "2",
+  x2: "16",
+  y2: "6"
+}), /*#__PURE__*/React.createElement("line", {
+  x1: "8",
+  y1: "2",
+  x2: "8",
+  y2: "6"
+}), /*#__PURE__*/React.createElement("line", {
+  x1: "3",
+  y1: "10",
+  x2: "21",
+  y2: "10"
+})));
+const Trash2 = svgIcon(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("polyline", {
+  points: "3 6 5 6 21 6"
+}), /*#__PURE__*/React.createElement("path", {
+  d: "M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"
+}), /*#__PURE__*/React.createElement("line", {
+  x1: "10",
+  y1: "11",
+  x2: "10",
+  y2: "17"
+}), /*#__PURE__*/React.createElement("line", {
+  x1: "14",
+  y1: "11",
+  x2: "14",
+  y2: "17"
+})));
+const Trash = svgIcon(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("polyline", {
+  points: "3 6 5 6 21 6"
+}), /*#__PURE__*/React.createElement("path", {
+  d: "M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"
+})));
+const GripVertical = svgIcon(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
+  cx: "9",
+  cy: "5",
+  r: "1.5"
+}), /*#__PURE__*/React.createElement("circle", {
+  cx: "15",
+  cy: "5",
+  r: "1.5"
+}), /*#__PURE__*/React.createElement("circle", {
+  cx: "9",
+  cy: "12",
+  r: "1.5"
+}), /*#__PURE__*/React.createElement("circle", {
+  cx: "15",
+  cy: "12",
+  r: "1.5"
+}), /*#__PURE__*/React.createElement("circle", {
+  cx: "9",
+  cy: "19",
+  r: "1.5"
+}), /*#__PURE__*/React.createElement("circle", {
+  cx: "15",
+  cy: "19",
+  r: "1.5"
+})));
+const History = svgIcon(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
+  cx: "12",
+  cy: "12",
+  r: "10"
+}), /*#__PURE__*/React.createElement("polyline", {
+  points: "12 6 12 12 16 14"
+})));
+const Search = svgIcon(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
+  cx: "11",
+  cy: "11",
+  r: "8"
+}), /*#__PURE__*/React.createElement("line", {
+  x1: "21",
+  y1: "21",
+  x2: "16.65",
+  y2: "16.65"
+})));
+const EquipmentCase = svgIcon(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
+  x: "1",
+  y: "6",
+  width: "22",
+  height: "16",
+  rx: "2",
+  ry: "2"
+}), /*#__PURE__*/React.createElement("path", {
+  d: "M7 6V4a2 2 0 012-2h6a2 2 0 012 2v2"
+}), /*#__PURE__*/React.createElement("circle", {
+  cx: "12",
+  cy: "14",
+  r: "3"
+})));
+const ArrowLeft = svgIcon(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("line", {
+  x1: "19",
+  y1: "12",
+  x2: "5",
+  y2: "12"
+}), /*#__PURE__*/React.createElement("polyline", {
+  points: "12 19 5 12 12 5"
+})));
+
+// ── Firebase init ──
+const firebaseConfig = {
+  apiKey: "AIzaSyA_WUGpfxardERpd_uFjZP3S06F5jPKQCc",
+  authDomain: "project-2640635398710702305.firebaseapp.com",
+  projectId: "project-2640635398710702305",
+  storageBucket: "project-2640635398710702305.firebasestorage.app",
+  messagingSenderId: "306768641295",
+  appId: "1:306768641295:web:c957079d05b68bd02dd27a"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const cloudDoc = db.collection('data').doc('main');
+const versionsCol = db.collection('data').doc('main').collection('versions');
+
+// ── Storage keys ──
+const STORAGE_KEY = 'zhushi_equipment_data_v2';
+const VERSIONS_KEY = 'zhushi_versions_v2';
+const MAX_VERSIONS = 30;
+
+// ── Default data ──
+const defaultGroups = [{
+  id: 'g1',
+  name: '摄影器材',
+  isExpanded: true,
+  subgroups: [{
+    id: 'sg1',
+    name: '机身',
+    isExpanded: true,
+    items: [{
+      id: 'i1',
+      name: 'Sony A7S3',
+      model: 'A7S3',
+      count: 0,
+      remark: '含电池'
+    }]
+  }, {
+    id: 'sg2',
+    name: '镜头',
+    isExpanded: true,
+    items: [{
+      id: 'i2',
+      name: '24-70mm f2.8',
+      model: 'GM II',
+      count: 0,
+      remark: ''
+    }]
+  }]
+}];
+const defaultPresets = [{
+  id: 'p1',
+  name: '常用单机套装',
+  items: [{
+    itemId: 'i1',
+    count: 1
+  }]
+}];
+
+// ── Load from localStorage ──
+const loadState = () => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      return {
+        groups: data.groups || defaultGroups,
+        presets: data.presets || defaultPresets,
+        projectInfo: data.projectInfo || {
+          name: '',
+          startDate: '',
+          endDate: '',
+          location: ''
+        }
+      };
+    }
+  } catch (e) {}
+  return {
+    groups: defaultGroups,
+    presets: defaultPresets,
+    projectInfo: {
+      name: '',
+      startDate: '',
+      endDate: '',
+      location: ''
+    }
+  };
+};
+const loadVersions = () => {
+  try {
+    const raw = localStorage.getItem(VERSIONS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+};
+
+// ── Helpers ──
+const fmtTime = iso => {
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+};
+
+// ── App ──
+const App = () => {
+  const [groups, setGroups] = useState(defaultGroups);
+  const [presets, setPresets] = useState(defaultPresets);
+  const [projectInfo, setProjectInfo] = useState({
+    name: '',
+    startDate: '',
+    endDate: '',
+    location: ''
+  });
+  const [loading, setLoading] = useState(true);
+  const [activePresetId, setActivePresetId] = useState(null);
+  const [activeModule, setActiveModule] = useState('inventory');
+  const [activeGroupId, setActiveGroupId] = useState(defaultGroups[0]?.id || 'g1');
+  const [activeSubgroupId, setActiveSubgroupId] = useState(defaultGroups[0]?.subgroups[0]?.id || 'sg1');
+  const [modal, setModal] = useState({
+    show: false,
+    type: '',
+    title: '',
+    value: '',
+    targetId: null,
+    extraData: null
+  });
+  const [toast, setToast] = useState({
+    show: false,
+    message: ''
+  });
+  const [versions, setVersions] = useState([]);
+  const [versionPanelOpen, setVersionPanelOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [highlightedItemId, setHighlightedItemId] = useState(null);
+  const [dragIndex, setDragIndex] = useState(null);
+  const [restoreConfirm, setRestoreConfirm] = useState(null);
+  const [firebaseOnline, setFirebaseOnline] = useState(false);
+
+  // Keep a ref of current state so saveVersion can always read latest
+  const stateRef = useRef({
+    groups,
+    presets,
+    projectInfo
+  });
+  useEffect(() => {
+    stateRef.current = {
+      groups,
+      presets,
+      projectInfo
+    };
+  }, [groups, presets, projectInfo]);
+
+  // Load from Firestore on mount (with localStorage fallback)
+  useEffect(() => {
+    cloudDoc.get().then(doc => {
+      if (doc.exists && doc.data().groups) {
+        const d = doc.data();
+        cloudVerRef.current = d._ver || 0;
+        setGroups(d.groups);
+        setPresets(d.presets || defaultPresets);
+        setProjectInfo(d.projectInfo || {
+          name: '',
+          startDate: '',
+          endDate: '',
+          location: ''
+        });
+        if (d.groups[0]?.id) setActiveGroupId(d.groups[0].id);
+        if (d.groups[0]?.subgroups[0]?.id) setActiveSubgroupId(d.groups[0].subgroups[0].id);
+      } else {
+        // Fallback to localStorage
+        const saved = loadState();
+        setGroups(saved.groups);
+        setPresets(saved.presets);
+        setProjectInfo(saved.projectInfo);
+        if (saved.groups[0]?.id) setActiveGroupId(saved.groups[0].id);
+        if (saved.groups[0]?.subgroups[0]?.id) setActiveSubgroupId(saved.groups[0].subgroups[0].id);
+      }
+      setFirebaseOnline(true);
+      setLoading(false);
+    }).catch(() => {
+      setFirebaseOnline(false);
+      const saved = loadState();
+      setGroups(saved.groups);
+      setPresets(saved.presets);
+      setProjectInfo(saved.projectInfo);
+      setLoading(false);
+    });
+
+    // Load versions from Firestore
+    versionsCol.orderBy('time', 'desc').limit(MAX_VERSIONS).get().then(snap => {
+      const vs = snap.docs.map(d => ({
+        id: parseInt(d.id),
+        ...d.data()
+      }));
+      setVersions(vs);
+    }).catch(() => {});
+  }, []);
+
+  // Poll Firestore for remote changes from other users
+  const cloudVerRef = useRef(0);
+  const isRemoteUpdate = useRef(false);
+  // Poll with recursive setTimeout (more reliable on mobile than setInterval)
+  useEffect(() => {
+    if (loading) return;
+    let active = true;
+    const poll = async () => {
+      if (!active) return;
+      try {
+        const doc = await cloudDoc.get();
+        if (active && doc.exists && doc.data().groups) {
+          const d = doc.data();
+          const ver = d._ver || 0;
+          if (ver !== cloudVerRef.current) {
+            cloudVerRef.current = ver;
+            isRemoteUpdate.current = true;
+            setGroups(d.groups);
+            setPresets(d.presets || defaultPresets);
+            setProjectInfo(d.projectInfo || {
+              name: '',
+              startDate: '',
+              endDate: '',
+              location: ''
+            });
+          }
+          setFirebaseOnline(true);
+        }
+      } catch (e) {
+        setFirebaseOnline(false);
+      }
+      if (active) setTimeout(poll, 2000);
+    };
+    poll();
+    // Re-sync immediately when tab becomes visible (mobile browsers throttle background tabs)
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') poll();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      active = false;
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [loading]);
+
+  // Save to Firestore + localStorage whenever data changes (user actions only)
+  const skipSaveRef = useRef(true);
+  useEffect(() => {
+    if (loading) return;
+    // Skip saves triggered by remote updates (other devices' changes) — only save user actions
+    if (isRemoteUpdate.current) {
+      isRemoteUpdate.current = false;
+      return;
+    }
+    // Skip the first save triggered by initial load
+    if (skipSaveRef.current) {
+      skipSaveRef.current = false;
+      return;
+    }
+    const ver = Date.now();
+    cloudVerRef.current = ver;
+    const data = {
+      groups,
+      presets,
+      projectInfo,
+      _ver: ver
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    cloudDoc.set(data).then(() => setFirebaseOnline(true)).catch(() => setFirebaseOnline(false));
+  }, [groups, presets, projectInfo, loading]);
+
+  // Save versions to Firestore
+  const syncVersions = useCallback(newVersions => {
+    localStorage.setItem(VERSIONS_KEY, JSON.stringify(newVersions));
+    // Wipe and rebuild versions in Firestore
+    versionsCol.get().then(snap => {
+      const batch = db.batch();
+      snap.docs.forEach(d => batch.delete(d.ref));
+      newVersions.forEach(v => {
+        const ref = versionsCol.doc(String(v.id));
+        batch.set(ref, {
+          time: v.time,
+          label: v.label,
+          groups: v.groups,
+          presets: v.presets,
+          projectInfo: v.projectInfo
+        });
+      });
+      batch.commit().catch(() => {});
+    }).catch(() => {});
+  }, []);
+  const showToast = useCallback(message => {
+    setToast({
+      show: true,
+      message
+    });
+    setTimeout(() => setToast({
+      show: false,
+      message: ''
+    }), 2000);
+  }, []);
+  const saveVersion = useCallback(label => {
+    const {
+      groups: g,
+      presets: p,
+      projectInfo: pi
+    } = stateRef.current;
+    const v = {
+      id: Date.now(),
+      time: new Date().toISOString(),
+      label,
+      groups: JSON.parse(JSON.stringify(g)),
+      presets: JSON.parse(JSON.stringify(p)),
+      projectInfo: {
+        ...pi
+      }
+    };
+    setVersions(prev => {
+      const next = [v, ...prev].slice(0, MAX_VERSIONS);
+      syncVersions(next);
+      return next;
+    });
+  }, [syncVersions]);
+  const restoreVersion = useCallback(v => {
+    setGroups(JSON.parse(JSON.stringify(v.groups)));
+    setPresets(JSON.parse(JSON.stringify(v.presets)));
+    setProjectInfo({
+      ...v.projectInfo
+    });
+    setVersionPanelOpen(false);
+    setRestoreConfirm(null);
+    showToast(`已恢复到「${v.label}」(${fmtTime(v.time)})`);
+  }, [showToast]);
+  const calculateDays = useCallback(() => {
+    if (!projectInfo.startDate || !projectInfo.endDate) return 0;
+    const start = new Date(projectInfo.startDate);
+    const end = new Date(projectInfo.endDate);
+    const diffTime = end - start;
+    return diffTime < 0 ? 0 : Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  }, [projectInfo.startDate, projectInfo.endDate]);
+  const toggleGroupExpand = useCallback(groupId => {
+    setGroups(groups => groups.map(g => g.id === groupId ? {
+      ...g,
+      isExpanded: !g.isExpanded
+    } : g));
+  }, []);
+  const toggleSubgroupExpand = useCallback((groupId, subgroupId) => {
+    setGroups(groups => groups.map(g => g.id === groupId ? {
+      ...g,
+      subgroups: g.subgroups.map(sg => sg.id === subgroupId ? {
+        ...sg,
+        isExpanded: !sg.isExpanded
+      } : sg)
+    } : g));
+  }, []);
+
+  // ── Drag & Drop handlers ──
+  const handleDragStart = useCallback((e, index) => {
+    setDragIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.currentTarget.classList.add('drag-ghost');
+  }, []);
+  const handleDragOver = useCallback((e, index) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragIndex === null || dragIndex === index) return;
+    setGroups(groups => {
+      const arr = [...groups];
+      const [item] = arr.splice(dragIndex, 1);
+      arr.splice(index, 0, item);
+      return arr;
+    });
+    setDragIndex(index);
+  }, [dragIndex]);
+  const handleDragEnd = useCallback(e => {
+    e.currentTarget.classList.remove('drag-ghost');
+    setDragIndex(null);
+    saveVersion('调整大组顺序');
+  }, [saveVersion]);
+  const flatItems = useMemo(() => {
+    let items = [];
+    groups.forEach(g => {
+      g.subgroups.forEach(sg => {
+        sg.items.forEach(it => {
+          items.push({
+            ...it,
+            groupId: g.id,
+            groupName: g.name,
+            subgroupId: sg.id,
+            subgroupName: sg.name
+          });
+        });
+      });
+    });
+    return items;
+  }, [groups]);
+
+  // Search results — fuzzy match across name, model, remark
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase();
+    return flatItems.filter(it => it.name.toLowerCase().includes(q) || it.model.toLowerCase().includes(q) || it.remark.toLowerCase().includes(q)).slice(0, 8); // max 8 results
+  }, [flatItems, searchQuery]);
+
+  // Navigate to a specific item in inventory
+  const navigateToItem = useCallback(item => {
+    setActiveGroupId(item.groupId);
+    setActiveSubgroupId(item.subgroupId);
+    setActiveModule('inventory');
+    setSearchQuery('');
+    setShowSearchDropdown(false);
+    // Flash highlight + scroll to the target row
+    setHighlightedItemId(null);
+    setTimeout(() => setHighlightedItemId(item.id), 100);
+    setTimeout(() => setHighlightedItemId(null), 2400);
+  }, []);
+
+  // Scroll to highlighted item after search navigation
+  useEffect(() => {
+    if (highlightedItemId) {
+      const timer = setTimeout(() => {
+        const el = document.querySelector(`[data-item-id="${highlightedItemId}"]`);
+        if (el) el.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightedItemId]);
+
+  // Close search dropdown on outside click
+  useEffect(() => {
+    const handler = () => setShowSearchDropdown(false);
+    if (showSearchDropdown) {
+      document.addEventListener('click', handler);
+      return () => document.removeEventListener('click', handler);
+    }
+  }, [showSearchDropdown]);
+  const handleModalConfirm = useCallback(() => {
+    const {
+      type,
+      value,
+      targetId,
+      extraData
+    } = modal;
+    if (type === 'addGroup') {
+      if (!value.trim()) return;
+      saveVersion('新建大组');
+      const newId = 'g_' + Date.now();
+      setGroups(groups => [...groups, {
+        id: newId,
+        name: value,
+        isExpanded: true,
+        subgroups: []
+      }]);
+      setActiveGroupId(newId);
+    } else if (type === 'renameGroup') {
+      if (!value.trim()) return;
+      saveVersion('重命名大组');
+      setGroups(groups => groups.map(g => g.id === targetId ? {
+        ...g,
+        name: value
+      } : g));
+    } else if (type === 'deleteGroup') {
+      saveVersion('删除大组');
+      setGroups(groups => {
+        const newGroups = groups.filter(g => g.id !== targetId);
+        if (activeGroupId === targetId) setActiveGroupId(newGroups[0]?.id || null);
+        return newGroups;
+      });
+    } else if (type === 'addSubgroup') {
+      if (!value.trim()) return;
+      saveVersion('添加小组');
+      const newSubId = 'sg_' + Date.now();
+      setGroups(groups => groups.map(g => g.id === activeGroupId ? {
+        ...g,
+        subgroups: [...g.subgroups, {
+          id: newSubId,
+          name: value,
+          isExpanded: true,
+          items: []
+        }]
+      } : g));
+      setActiveSubgroupId(newSubId);
+    } else if (type === 'renameSubgroup') {
+      if (!value.trim()) return;
+      saveVersion('重命名小组');
+      setGroups(groups => groups.map(g => ({
+        ...g,
+        subgroups: g.subgroups.map(sg => sg.id === targetId ? {
+          ...sg,
+          name: value
+        } : sg)
+      })));
+    } else if (type === 'deleteSubgroup') {
+      saveVersion('删除小组');
+      setGroups(groups => groups.map(g => g.id === activeGroupId ? {
+        ...g,
+        subgroups: g.subgroups.filter(sg => sg.id !== targetId)
+      } : g));
+      setActiveSubgroupId(null);
+    } else if (type === 'globalReset') {
+      saveVersion('全局清零');
+      setGroups(groups => groups.map(g => ({
+        ...g,
+        subgroups: g.subgroups.map(sg => ({
+          ...sg,
+          items: sg.items.map(it => ({
+            ...it,
+            count: 0
+          }))
+        }))
+      })));
+      showToast("全局出库数量已清零");
+    } else if (type === 'resetGroup') {
+      saveVersion('重置大组数量');
+      setGroups(groups => groups.map(g => g.id === targetId ? {
+        ...g,
+        subgroups: g.subgroups.map(sg => ({
+          ...sg,
+          items: sg.items.map(it => ({
+            ...it,
+            count: 0
+          }))
+        }))
+      } : g));
+      showToast("该大组下所有设备数量已重置");
+    } else if (type === 'resetSubgroup') {
+      saveVersion('重置小组数量');
+      setGroups(groups => groups.map(g => ({
+        ...g,
+        subgroups: g.subgroups.map(sg => sg.id === targetId ? {
+          ...sg,
+          items: sg.items.map(it => ({
+            ...it,
+            count: 0
+          }))
+        } : sg)
+      })));
+      showToast("该小组下所有设备数量已重置");
+    } else if (type === 'addPreset') {
+      if (!value.trim()) return;
+      saveVersion('创建预设模版');
+      const newP = {
+        id: 'p_' + Date.now(),
+        name: value,
+        items: []
+      };
+      setPresets(presets => [...presets, newP]);
+      setActivePresetId(newP.id);
+    } else if (type === 'renamePreset') {
+      saveVersion('重命名预设');
+      setPresets(presets => presets.map(p => p.id === targetId ? {
+        ...p,
+        name: value
+      } : p));
+    } else if (type === 'deletePreset') {
+      saveVersion('删除预设模版');
+      setPresets(presets => presets.filter(p => p.id !== targetId));
+      setActivePresetId(null);
+    } else if (type === 'clearPresetContent') {
+      saveVersion('清空预设内容');
+      setPresets(presets => presets.map(p => p.id === targetId ? {
+        ...p,
+        items: []
+      } : p));
+    } else if (type === 'deleteItem') {
+      saveVersion('删除设备');
+      setGroups(groups => groups.map(g => ({
+        ...g,
+        subgroups: g.subgroups.map(sg => ({
+          ...sg,
+          items: sg.items.filter(it => it.id !== extraData.itemId)
+        }))
+      })));
+    }
+    setModal(m => ({
+      ...m,
+      show: false
+    }));
+  }, [modal, activeGroupId, activeSubgroupId, saveVersion, showToast]);
+  const updateItem = useCallback((itemId, field, value) => {
+    setGroups(groups => groups.map(g => ({
+      ...g,
+      subgroups: g.subgroups.map(sg => ({
+        ...sg,
+        items: sg.items.map(it => it.id === itemId ? {
+          ...it,
+          [field]: value
+        } : it)
+      }))
+    })));
+  }, []);
+  const adjustCount = useCallback((itemId, delta) => {
+    setGroups(groups => groups.map(g => ({
+      ...g,
+      subgroups: g.subgroups.map(sg => ({
+        ...sg,
+        items: sg.items.map(it => it.id === itemId ? {
+          ...it,
+          count: Math.max(0, it.count + delta)
+        } : it)
+      }))
+    })));
+  }, []);
+  const toggleItemInPreset = useCallback(itemId => {
+    if (!activePresetId) return;
+    setPresets(presets => presets.map(p => {
+      if (p.id === activePresetId) {
+        const exists = p.items.find(i => i.itemId === itemId);
+        return {
+          ...p,
+          items: exists ? p.items.filter(i => i.itemId !== itemId) : [...p.items, {
+            itemId,
+            count: 1
+          }]
+        };
+      }
+      return p;
+    }));
+  }, [activePresetId]);
+  const updatePresetItemCount = useCallback((itemId, delta) => {
+    setPresets(presets => presets.map(p => p.id === activePresetId ? {
+      ...p,
+      items: p.items.map(it => it.itemId === itemId ? {
+        ...it,
+        count: Math.max(0, it.count + delta)
+      } : it)
+    } : p));
+  }, [activePresetId]);
+  const applyPreset = useCallback(pid => {
+    const preset = presets.find(p => p.id === pid);
+    if (!preset) return;
+    saveVersion(`应用预设「${preset.name}」`);
+    setGroups(groups => groups.map(g => ({
+      ...g,
+      subgroups: g.subgroups.map(sg => ({
+        ...sg,
+        items: sg.items.map(it => {
+          const pi = preset.items.find(pitem => pitem.itemId === it.id);
+          return pi ? {
+            ...it,
+            count: pi.count
+          } : it;
+        })
+      }))
+    })));
+    showToast(`预设「${preset.name}」已应用`);
+    setActiveModule('inventory');
+  }, [presets, showToast, saveVersion]);
+  const currentPreset = presets.find(p => p.id === activePresetId);
+  const groupedPresetItems = useMemo(() => {
+    if (!currentPreset) return [];
+    let grouped = {};
+    currentPreset.items.forEach(pi => {
+      const detail = flatItems.find(f => f.id === pi.itemId);
+      if (detail) {
+        const key = `${detail.groupName} / ${detail.subgroupName}`;
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push({
+          ...detail,
+          presetCount: pi.count
+        });
+      }
+    });
+    return Object.entries(grouped);
+  }, [currentPreset, flatItems]);
+  const selectedItemsManifest = useMemo(() => groups.map(g => ({
+    ...g,
+    subgroups: g.subgroups.map(sg => ({
+      ...sg,
+      items: sg.items.filter(item => item.count > 0)
+    })).filter(sg => sg.items.length > 0)
+  })).filter(g => g.subgroups.length > 0), [groups]);
+  const activeGroup = groups.find(g => g.id === activeGroupId);
+  const activeSubgroup = activeGroup?.subgroups.find(sg => sg.id === activeSubgroupId);
+  const handleCopyManifest = () => {
+    const totalItems = selectedItemsManifest.reduce((acc, g) => acc + g.subgroups.reduce((sacc, sg) => sacc + sg.items.reduce((iacc, it) => iacc + it.count, 0), 0), 0);
+    let text = `【竹石影视清单】\n`;
+    text += `项目：${projectInfo.name || '未命名'}\n`;
+    text += `地点：${projectInfo.location || '未记录'}\n`;
+    text += `周期：${projectInfo.startDate || '未定'} 至 ${projectInfo.endDate || '未定'} (共 ${calculateDays()} 天)\n`;
+    text += `总件数：${totalItems}\n`;
+    text += `----------------\n`;
+    selectedItemsManifest.forEach(g => {
+      text += `\n[${g.name}]\n`;
+      g.subgroups.forEach(sg => {
+        text += `>> ${sg.name}\n`;
+        sg.items.forEach(it => {
+          text += `- ${it.name} ${it.model ? '(' + it.model + ')' : ''} x${it.count} ${it.remark ? '[' + it.remark + ']' : ''}\n`;
+        });
+      });
+    });
+    navigator.clipboard.writeText(text).then(() => {
+      showToast("清单已成功复制到剪贴板");
+    }).catch(() => {
+      showToast("复制失败，请手动选择复制");
+    });
+  };
+  const handleDeleteVersion = useCallback((e, vid) => {
+    e.stopPropagation();
+    setVersions(prev => {
+      const next = prev.filter(v => v.id !== vid);
+      syncVersions(next);
+      return next;
+    });
+  }, [syncVersions]);
+  const handleClearVersions = useCallback(() => {
+    setVersions([]);
+    syncVersions([]);
+    showToast('所有版本记录已清除');
+  }, [showToast, syncVersions]);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-800 pb-24"
+  }, loading && /*#__PURE__*/React.createElement("div", {
+    className: "fixed inset-0 z-[200] bg-slate-50 flex items-center justify-center"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "text-center space-y-4"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "w-12 h-12 mx-auto border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin"
+  }), /*#__PURE__*/React.createElement("p", {
+    className: "text-sm font-black text-slate-400 uppercase tracking-widest"
+  }, "\u52A0\u8F7D\u4E2D..."))), /*#__PURE__*/React.createElement("div", {
+    className: "max-w-7xl mx-auto"
+  }, /*#__PURE__*/React.createElement("header", {
+    className: "mb-6 lg:mb-8 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-3 lg:gap-4 shrink-0"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "w-10 h-10 lg:w-12 lg:h-12 bg-slate-900 rounded-2xl flex items-center justify-center shadow-2xl ring-4 ring-slate-100 shrink-0"
+  }, /*#__PURE__*/React.createElement(Film, {
+    className: "text-white",
+    size: 22
+  })), /*#__PURE__*/React.createElement("h1", {
+    className: "text-lg lg:text-2xl font-black text-slate-900 tracking-tight whitespace-nowrap"
+  }, "\u51FA\u5E93\u52A9\u624B"), /*#__PURE__*/React.createElement("span", {
+    className: `w-2 h-2 rounded-full shrink-0 ${firebaseOnline ? 'bg-green-500' : 'bg-red-500'}`,
+    title: firebaseOnline ? '云端已连接' : '云端未连接'
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2 lg:gap-4 flex-wrap w-full lg:w-auto"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "relative flex-1 sm:flex-none min-w-[120px] sm:min-w-0",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center bg-white rounded-2xl border border-slate-200 shadow-sm focus-within:ring-2 focus-within:ring-slate-300 focus-within:border-slate-300 transition-all"
+  }, /*#__PURE__*/React.createElement(Search, {
+    size: 14,
+    className: "ml-3 lg:ml-4 text-slate-400 shrink-0"
+  }), /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    value: searchQuery,
+    onChange: e => {
+      setSearchQuery(e.target.value);
+      setShowSearchDropdown(true);
+    },
+    onFocus: () => searchQuery.trim() && setShowSearchDropdown(true),
+    placeholder: "\u641C\u7D22...",
+    className: "w-full sm:w-28 lg:w-44 bg-transparent border-none pl-2 lg:pl-3 pr-2 lg:pr-3 py-2.5 lg:py-3 text-xs lg:text-sm font-bold outline-none text-slate-700 placeholder:text-slate-300"
+  }), searchQuery && /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setSearchQuery('');
+      setShowSearchDropdown(false);
+    },
+    className: "pr-2 lg:pr-3 text-slate-300 hover:text-slate-500 transition-colors"
+  }, /*#__PURE__*/React.createElement(X, {
+    size: 14
+  }))), showSearchDropdown && searchQuery.trim() && /*#__PURE__*/React.createElement("div", {
+    className: "absolute top-full left-0 right-0 sm:left-auto sm:right-0 mt-2 sm:w-72 bg-white rounded-2xl border border-slate-100 shadow-xl overflow-hidden z-50 animate-in fade-in"
+  }, searchResults.length > 0 ? searchResults.map(it => /*#__PURE__*/React.createElement("button", {
+    key: it.id,
+    onClick: () => navigateToItem(it),
+    className: "w-full px-4 lg:px-5 py-3 lg:py-3.5 text-left hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-b-0 flex items-center justify-between gap-2 lg:gap-3"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "min-w-0"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "font-black text-slate-800 text-[12px] lg:text-[13px] truncate"
+  }, it.name), it.model && /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] text-slate-400 font-bold mr-1"
+  }, it.model)), /*#__PURE__*/React.createElement("span", {
+    className: "text-[9px] lg:text-[10px] text-slate-300 font-bold shrink-0"
+  }, it.groupName, " / ", it.subgroupName))) : /*#__PURE__*/React.createElement("div", {
+    className: "px-5 py-6 text-center text-xs font-bold text-slate-300"
+  }, "\u672A\u627E\u5230\u5339\u914D\u5668\u6750"))), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setModal({
+      show: true,
+      type: 'globalReset',
+      title: '全局重置出库数量？'
+    }),
+    className: "shrink-0 p-2.5 sm:px-4 sm:py-3 bg-white text-red-500 rounded-2xl text-xs sm:text-sm font-black flex items-center gap-1 sm:gap-1.5 hover:bg-red-50 transition-all border border-red-100 shadow-sm",
+    title: "\u5168\u5C40\u6E05\u96F6"
+  }, /*#__PURE__*/React.createElement(RefreshCw, {
+    size: 14,
+    className: "sm:hidden"
+  }), /*#__PURE__*/React.createElement(RefreshCw, {
+    size: 16,
+    className: "hidden sm:inline"
+  }), " ", /*#__PURE__*/React.createElement("span", {
+    className: "hidden sm:inline"
+  }, "\u5168\u5C40\u6E05\u96F6")), /*#__PURE__*/React.createElement("nav", {
+    className: "bg-white p-1 lg:p-1.5 rounded-2xl border border-slate-200 shadow-sm flex gap-0.5 lg:gap-1"
+  }, [{
+    id: 'inventory',
+    icon: LayoutDashboard,
+    label: '仓库管理',
+    short: '仓库'
+  }, {
+    id: 'preset',
+    icon: Boxes,
+    label: '预设模版',
+    short: '预设'
+  }, {
+    id: 'manifest',
+    icon: ClipboardList,
+    label: '出库清单',
+    short: '出库'
+  }].map(tab => /*#__PURE__*/React.createElement("button", {
+    key: tab.id,
+    onClick: () => setActiveModule(tab.id),
+    className: `flex items-center gap-1 lg:gap-2 px-2.5 sm:px-5 py-2.5 lg:py-3 rounded-xl text-xs lg:text-sm font-black transition-all ${activeModule === tab.id ? 'bg-slate-900 text-white shadow-xl translate-y-[-1px]' : 'text-slate-400 hover:text-slate-600'}`
+  }, /*#__PURE__*/React.createElement(tab.icon, {
+    size: 15,
+    className: "lg:hidden"
+  }), /*#__PURE__*/React.createElement(tab.icon, {
+    size: 18,
+    className: "hidden lg:inline"
+  }), " ", /*#__PURE__*/React.createElement("span", {
+    className: "hidden sm:inline"
+  }, tab.label), /*#__PURE__*/React.createElement("span", {
+    className: "sm:hidden"
+  }, tab.short)))), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setVersionPanelOpen(true),
+    className: "relative p-2.5 lg:p-3 bg-white rounded-2xl border border-slate-200 text-slate-500 hover:text-slate-900 hover:border-slate-400 transition-all shadow-sm shrink-0",
+    title: "\u7248\u672C\u8BB0\u5F55"
+  }, /*#__PURE__*/React.createElement(History, {
+    size: 16,
+    className: "lg:hidden"
+  }), /*#__PURE__*/React.createElement(History, {
+    size: 20,
+    className: "hidden lg:inline"
+  }), versions.length > 0 && /*#__PURE__*/React.createElement("span", {
+    className: "absolute -top-1 -right-1 w-4 h-4 lg:w-5 lg:h-5 bg-indigo-600 text-white text-[9px] lg:text-[10px] font-black rounded-full flex items-center justify-center"
+  }, versions.length > 99 ? '99+' : versions.length)))), activeModule === 'inventory' && /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col lg:flex-row gap-8 animate-in fade-in duration-500 min-h-[500px] lg:h-[calc(100vh-220px)]"
+  }, /*#__PURE__*/React.createElement("aside", {
+    className: `w-full lg:w-72 flex flex-col shrink-0 ${activeSubgroup ? 'hidden' : 'flex'} lg:flex`
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between px-3 shrink-0 mb-3"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "text-xs font-black text-slate-400 uppercase tracking-widest"
+  }, "\u5668\u6750\u5206\u7C7B"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setModal({
+      show: true,
+      type: 'addGroup',
+      title: '新建资产大组',
+      value: ''
+    }),
+    className: "p-2 bg-white rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-900 hover:text-white transition-all shadow-sm"
+  }, /*#__PURE__*/React.createElement(Plus, {
+    size: 18
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "space-y-3 overflow-y-auto hide-scrollbar flex-1 pb-4 pr-1"
+  }, groups.map((g, idx) => /*#__PURE__*/React.createElement("div", {
+    key: g.id,
+    draggable: true,
+    onDragStart: e => handleDragStart(e, idx),
+    onDragOver: e => handleDragOver(e, idx),
+    onDragEnd: handleDragEnd,
+    className: `bg-white rounded-2xl border transition-all group/drag ${activeGroupId === g.id ? 'border-slate-300 shadow-md ring-4 ring-slate-100/50' : 'border-slate-100'} ${dragIndex === idx ? 'drag-ghost' : ''}`
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between p-1.5"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-1 pl-1 text-slate-200 hover:text-slate-500 cursor-grab active:cursor-grabbing shrink-0",
+    title: "\u957F\u6309\u62D6\u653E\u6392\u5E8F"
+  }, /*#__PURE__*/React.createElement(GripVertical, {
+    size: 16
+  })), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setActiveGroupId(g.id);
+      toggleGroupExpand(g.id);
+    },
+    className: `flex-1 flex items-center gap-2 px-2 py-3 rounded-xl text-left text-[14px] font-black ${activeGroupId === g.id ? 'text-slate-900' : 'text-slate-500 hover:bg-slate-50'}`
+  }, g.isExpanded ? /*#__PURE__*/React.createElement(ChevronDown, {
+    size: 16,
+    className: "text-slate-400"
+  }) : /*#__PURE__*/React.createElement(ChevronRight, {
+    size: 16,
+    className: "text-slate-400"
+  }), " ", g.name), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-0.5 px-1 shrink-0"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: e => {
+      e.stopPropagation();
+      setActiveGroupId(g.id);
+      setModal({
+        show: true,
+        type: 'renameGroup',
+        title: '修改大组名称',
+        value: g.name,
+        targetId: g.id
+      });
+    },
+    className: "p-2 text-slate-200 hover:text-indigo-500 transition-colors",
+    title: "\u91CD\u547D\u540D"
+  }, /*#__PURE__*/React.createElement(Edit3, {
+    size: 13
+  })), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setModal({
+      show: true,
+      type: 'resetGroup',
+      title: `重置「${g.name}」下所有数量？`,
+      targetId: g.id
+    }),
+    className: "p-2 text-orange-200 hover:text-orange-500 transition-colors"
+  }, /*#__PURE__*/React.createElement(RefreshCw, {
+    size: 14
+  })), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setModal({
+      show: true,
+      type: 'deleteGroup',
+      title: '删除大组？',
+      targetId: g.id
+    }),
+    className: "p-2 text-slate-200 hover:text-red-500 transition-colors"
+  }, /*#__PURE__*/React.createElement(Trash, {
+    size: 14
+  })))), g.isExpanded && /*#__PURE__*/React.createElement("div", {
+    className: "px-3 pb-3 flex flex-col gap-1.5 border-t border-slate-50 pt-2"
+  }, g.subgroups.map(sg => /*#__PURE__*/React.createElement("div", {
+    key: sg.id,
+    className: "relative group/sg flex items-center gap-1"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setActiveGroupId(g.id);
+      setActiveSubgroupId(sg.id);
+    },
+    className: `flex-1 pl-7 pr-2 py-3 text-left text-xs font-black rounded-xl transition-all ${activeSubgroupId === sg.id ? 'bg-slate-900 text-white shadow-lg translate-x-1' : 'text-slate-400 hover:bg-slate-50'}`
+  }, sg.name), /*#__PURE__*/React.createElement("button", {
+    onClick: e => {
+      e.stopPropagation();
+      setActiveGroupId(g.id);
+      setModal({
+        show: true,
+        type: 'renameSubgroup',
+        title: '修改小组名称',
+        value: sg.name,
+        targetId: sg.id
+      });
+    },
+    className: `p-1 rounded transition-all opacity-0 group-hover/sg:opacity-100 text-slate-300 hover:text-indigo-500 ${activeSubgroupId === sg.id ? 'text-slate-400 hover:text-indigo-300' : ''}`,
+    title: "\u91CD\u547D\u540D"
+  }, /*#__PURE__*/React.createElement(Edit3, {
+    size: 12
+  })), /*#__PURE__*/React.createElement("button", {
+    onClick: e => {
+      e.stopPropagation();
+      setActiveGroupId(g.id);
+      setModal({
+        show: true,
+        type: 'deleteSubgroup',
+        title: `删除小组「${sg.name}」？`,
+        targetId: sg.id
+      });
+    },
+    className: `p-1 rounded transition-all ${activeSubgroupId === sg.id ? 'text-slate-400 hover:text-red-400 hover:bg-slate-800/50' : 'opacity-0 group-hover/sg:opacity-100 text-slate-300 hover:text-red-500 hover:bg-slate-200/50'}`,
+    title: "\u5220\u9664\u5C0F\u7EC4"
+  }, /*#__PURE__*/React.createElement(Trash, {
+    size: 14
+  })))), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setActiveGroupId(g.id);
+      setModal({
+        show: true,
+        type: 'addSubgroup',
+        title: '添加小组',
+        value: ''
+      });
+    },
+    className: "px-8 py-3 text-xs font-black text-slate-300 hover:text-indigo-600 flex items-center gap-2 transition-all mt-1 border border-dashed border-transparent hover:border-indigo-100 hover:bg-indigo-50/30 rounded-xl"
+  }, /*#__PURE__*/React.createElement(Plus, {
+    size: 14
+  }), " \u6DFB\u52A0\u5C0F\u7EC4")))))), /*#__PURE__*/React.createElement("main", {
+    className: `flex-1 min-w-0 ${activeSubgroup ? 'flex' : 'hidden'} lg:flex flex-col`
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-white rounded-[32px] shadow-2xl border border-slate-100 overflow-hidden flex-1 flex flex-col min-h-0"
+  }, activeSubgroup ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "px-5 lg:px-8 py-5 lg:py-8 flex flex-wrap justify-between items-center border-b border-slate-100 bg-slate-50/30 gap-4 lg:gap-6 shrink-0"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-3 lg:gap-5"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setActiveSubgroupId(null),
+    className: "lg:hidden p-2 -ml-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-all",
+    title: "\u8FD4\u56DE\u5217\u8868"
+  }, /*#__PURE__*/React.createElement(ArrowLeft, {
+    size: 20
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-slate-100 to-slate-50 rounded-2xl flex items-center justify-center shadow-inner border border-slate-200/60 text-slate-700 shrink-0"
+  }, /*#__PURE__*/React.createElement(EquipmentCase, {
+    size: 22
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "min-w-0"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-3"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "text-base lg:text-xl font-black text-slate-900 truncate"
+  }, activeSubgroup.name)), /*#__PURE__*/React.createElement("p", {
+    className: "text-[11px] text-slate-400 font-black uppercase tracking-widest mt-1 flex items-center gap-2"
+  }, activeGroup.name, " ", /*#__PURE__*/React.createElement(ChevronRight, {
+    size: 10
+  }), " ", activeSubgroup.name))), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2 lg:gap-3"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setModal({
+      show: true,
+      type: 'resetSubgroup',
+      title: `重置「${activeSubgroup.name}」所有数量？`,
+      targetId: activeSubgroup.id
+    }),
+    className: "px-3 lg:px-5 py-2.5 lg:py-3 bg-white text-orange-600 rounded-2xl border border-orange-100 hover:bg-orange-600 hover:text-white transition-all shadow-sm flex items-center gap-1.5 lg:gap-2 font-black text-[11px] lg:text-xs uppercase"
+  }, /*#__PURE__*/React.createElement(RefreshCw, {
+    size: 14,
+    className: "lg:hidden"
+  }), /*#__PURE__*/React.createElement(RefreshCw, {
+    size: 16,
+    className: "hidden lg:inline"
+  }), " ", /*#__PURE__*/React.createElement("span", {
+    className: "hidden sm:inline"
+  }, "\u6E05\u7A7A"), /*#__PURE__*/React.createElement("span", {
+    className: "hidden lg:inline"
+  }, "\u672C\u7EC4\u6570\u91CF")), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      const newId = 'it_' + Date.now();
+      setGroups(groups => groups.map(g => g.id === activeGroupId ? {
+        ...g,
+        subgroups: g.subgroups.map(sg => sg.id === activeSubgroupId ? {
+          ...sg,
+          items: [...sg.items, {
+            id: newId,
+            name: '',
+            model: '',
+            count: 0,
+            remark: ''
+          }]
+        } : sg)
+      } : g));
+    },
+    className: "px-3 lg:px-6 py-2.5 lg:py-3 bg-slate-900 text-white rounded-2xl text-[11px] lg:text-xs font-black flex items-center gap-1.5 lg:gap-2 hover:bg-slate-800 transition-all shadow-xl shadow-slate-200"
+  }, /*#__PURE__*/React.createElement(Plus, {
+    size: 16,
+    className: "lg:hidden"
+  }), /*#__PURE__*/React.createElement(Plus, {
+    size: 18,
+    className: "hidden lg:inline"
+  }), " ", /*#__PURE__*/React.createElement("span", {
+    className: "hidden sm:inline"
+  }, "\u6DFB\u52A0"), /*#__PURE__*/React.createElement("span", {
+    className: "hidden lg:inline"
+  }, "\u8BBE\u5907")))), /*#__PURE__*/React.createElement("div", {
+    className: "px-4 pb-4 pt-0 flex-1 overflow-auto hide-scrollbar relative"
+  }, /*#__PURE__*/React.createElement("table", {
+    className: "w-full text-left border-collapse"
+  }, /*#__PURE__*/React.createElement("thead", {
+    className: "sticky top-0 bg-white/95 backdrop-blur-xl z-10 shadow-[0_1px_0_0_#f8fafc]"
+  }, /*#__PURE__*/React.createElement("tr", {
+    className: "text-slate-400 text-[10px] lg:text-[11px] font-black uppercase tracking-[0.2em]"
+  }, /*#__PURE__*/React.createElement("th", {
+    className: "px-3 lg:px-6 py-4 lg:py-5"
+  }, "\u540D\u79F0"), /*#__PURE__*/React.createElement("th", {
+    className: "px-2 lg:px-6 py-4 lg:py-5 hidden sm:table-cell"
+  }, "\u578B\u53F7"), /*#__PURE__*/React.createElement("th", {
+    className: "px-2 lg:px-6 py-4 lg:py-5 text-center"
+  }, "\u6570\u91CF"), /*#__PURE__*/React.createElement("th", {
+    className: "px-2 lg:px-6 py-4 lg:py-5 hidden md:table-cell"
+  }, "\u5907\u6CE8"), /*#__PURE__*/React.createElement("th", {
+    className: "w-10 lg:w-16"
+  }))), /*#__PURE__*/React.createElement("tbody", {
+    className: "divide-y divide-slate-50/60"
+  }, activeSubgroup.items.map(item => /*#__PURE__*/React.createElement("tr", {
+    key: item.id,
+    "data-item-id": item.id,
+    className: `group hover:bg-slate-50/40 transition-colors ${highlightedItemId === item.id ? 'highlight-row' : ''}`
+  }, /*#__PURE__*/React.createElement("td", {
+    className: "px-2 lg:px-4 py-3 lg:py-5"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    value: item.name,
+    onChange: e => updateItem(item.id, 'name', e.target.value),
+    className: "w-full px-2 lg:px-4 py-2 lg:py-3 bg-transparent border-none font-black text-[13px] lg:text-[14px] text-slate-800 outline-none focus:bg-white rounded-xl focus:ring-2 ring-slate-100",
+    placeholder: "\u5668\u6750\u540D\u79F0..."
+  })), /*#__PURE__*/React.createElement("td", {
+    className: "px-2 lg:px-4 py-3 lg:py-5 hidden sm:table-cell"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    value: item.model,
+    onChange: e => updateItem(item.id, 'model', e.target.value),
+    className: "w-full px-2 lg:px-4 py-2 lg:py-3 bg-transparent border-none text-xs text-slate-500 font-bold outline-none",
+    placeholder: "\u89C4\u683C"
+  })), /*#__PURE__*/React.createElement("td", {
+    className: "px-2 lg:px-6 py-3 lg:py-5"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-center gap-1.5 lg:gap-2.5"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => adjustCount(item.id, -1),
+    className: "w-7 h-7 lg:w-9 lg:h-9 rounded-lg lg:rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-900 hover:text-white transition-all shadow-sm"
+  }, /*#__PURE__*/React.createElement(Minus, {
+    size: 12,
+    className: "lg:hidden"
+  }), /*#__PURE__*/React.createElement(Minus, {
+    size: 14,
+    className: "hidden lg:inline"
+  })), /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    value: item.count,
+    onChange: e => updateItem(item.id, 'count', parseInt(e.target.value) || 0),
+    className: "w-10 lg:w-14 text-center font-black text-sm bg-transparent border-none focus:ring-0"
+  }), /*#__PURE__*/React.createElement("button", {
+    onClick: () => adjustCount(item.id, 1),
+    className: "w-7 h-7 lg:w-9 lg:h-9 rounded-lg lg:rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-900 hover:text-white transition-all shadow-sm"
+  }, /*#__PURE__*/React.createElement(Plus, {
+    size: 12,
+    className: "lg:hidden"
+  }), /*#__PURE__*/React.createElement(Plus, {
+    size: 14,
+    className: "hidden lg:inline"
+  })))), /*#__PURE__*/React.createElement("td", {
+    className: "px-2 lg:px-4 py-3 lg:py-5 hidden md:table-cell"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    value: item.remark,
+    onChange: e => updateItem(item.id, 'remark', e.target.value),
+    className: "w-full px-2 lg:px-4 py-2 lg:py-3 bg-transparent border-none text-xs text-slate-400 font-medium outline-none",
+    placeholder: "\u5907\u6CE8..."
+  })), /*#__PURE__*/React.createElement("td", {
+    className: "px-1 lg:px-4 py-3 lg:py-5"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setModal({
+      show: true,
+      type: 'deleteItem',
+      title: '永久删除此项？',
+      extraData: {
+        itemId: item.id
+      }
+    }),
+    className: "opacity-0 group-hover:opacity-100 p-1.5 lg:p-2 text-slate-200 hover:text-red-500 transition-all"
+  }, /*#__PURE__*/React.createElement(Trash2, {
+    size: 16,
+    className: "lg:hidden"
+  }), /*#__PURE__*/React.createElement(Trash2, {
+    size: 18,
+    className: "hidden lg:inline"
+  }))))))))) : /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 flex flex-col items-center justify-center text-slate-200 py-32 space-y-8 animate-pulse"
+  }, /*#__PURE__*/React.createElement(Boxes, {
+    size: 64,
+    strokeWidth: 1
+  }), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs font-black uppercase tracking-[0.3em] text-slate-400"
+  }, "\u9009\u62E9\u4E00\u4E2A\u5668\u6750\u5C0F\u7EC4\u8FDB\u884C\u7BA1\u7406"))))), activeModule === 'preset' && /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col lg:flex-row gap-8 animate-in fade-in duration-500 min-h-[500px] lg:h-[calc(100vh-220px)]"
+  }, /*#__PURE__*/React.createElement("aside", {
+    className: `w-full lg:w-72 flex flex-col gap-5 shrink-0 ${activePresetId ? 'hidden' : 'flex'} lg:flex`
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between px-3"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "text-xs font-black text-slate-400 uppercase tracking-widest"
+  }, "\u6A21\u677F\u4E2D\u5FC3"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setModal({
+      show: true,
+      type: 'addPreset',
+      title: '创建新模版',
+      value: ''
+    }),
+    className: "p-2 bg-white rounded-lg border border-slate-200 text-slate-600 hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+  }, /*#__PURE__*/React.createElement(Plus, {
+    size: 18
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "space-y-3 overflow-y-auto pr-1 hide-scrollbar"
+  }, presets.map(p => /*#__PURE__*/React.createElement("button", {
+    key: p.id,
+    onClick: () => setActivePresetId(p.id),
+    className: `w-full px-5 py-5 rounded-2xl flex items-center justify-between font-black transition-all ${activePresetId === p.id ? 'bg-indigo-600 text-white shadow-xl translate-x-2' : 'bg-white border border-slate-100 text-slate-500 hover:bg-slate-50'}`
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "truncate text-[14px]"
+  }, p.name), /*#__PURE__*/React.createElement(ArrowRight, {
+    size: 16,
+    className: activePresetId === p.id ? 'opacity-100' : 'opacity-0 transition-all'
+  }))))), /*#__PURE__*/React.createElement("main", {
+    className: `flex-1 bg-white rounded-[32px] border border-slate-100 shadow-2xl ${activePresetId ? 'flex' : 'hidden'} lg:flex flex-col overflow-hidden`
+  }, currentPreset ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "px-5 lg:px-8 py-5 lg:py-7 flex flex-wrap justify-between items-center border-b border-slate-100 bg-slate-50/30 gap-4 lg:gap-6 shrink-0"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-3 lg:gap-4"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setActivePresetId(null),
+    className: "lg:hidden p-2 -ml-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-all",
+    title: "\u8FD4\u56DE\u5217\u8868"
+  }, /*#__PURE__*/React.createElement(ArrowLeft, {
+    size: 20
+  })), /*#__PURE__*/React.createElement("h3", {
+    className: "text-base lg:text-lg font-black text-slate-900"
+  }, currentPreset.name), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setModal({
+      show: true,
+      type: 'renamePreset',
+      title: '修改名称',
+      value: currentPreset.name,
+      targetId: currentPreset.id
+    }),
+    className: "p-2 text-slate-300 hover:text-indigo-600 transition-all"
+  }, /*#__PURE__*/React.createElement(Edit3, {
+    size: 18
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2 lg:gap-3"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => applyPreset(currentPreset.id),
+    className: "px-3 lg:px-6 py-2.5 lg:py-3 bg-green-600 text-white rounded-2xl text-[11px] lg:text-xs font-black flex items-center gap-1.5 lg:gap-2 hover:bg-green-700 transition-all shadow-lg shadow-green-100"
+  }, /*#__PURE__*/React.createElement(Save, {
+    size: 16,
+    className: "lg:hidden"
+  }), /*#__PURE__*/React.createElement(Save, {
+    size: 18,
+    className: "hidden lg:inline"
+  }), " ", /*#__PURE__*/React.createElement("span", {
+    className: "hidden sm:inline"
+  }, "\u5E94\u7528"), /*#__PURE__*/React.createElement("span", {
+    className: "hidden lg:inline"
+  }, "\u5230\u5F53\u524D\u5E93\u5B58")), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setModal({
+      show: true,
+      type: 'deletePreset',
+      title: `确认删除「${currentPreset.name}」？`,
+      targetId: currentPreset.id
+    }),
+    className: "p-2.5 lg:p-3.5 text-slate-300 hover:text-red-500 bg-slate-100/50 rounded-2xl transition-all"
+  }, /*#__PURE__*/React.createElement(Trash2, {
+    size: 16,
+    className: "lg:hidden"
+  }), /*#__PURE__*/React.createElement(Trash2, {
+    size: 18,
+    className: "hidden lg:inline"
+  })))), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "w-full lg:w-5/12 border-b lg:border-b-0 lg:border-r border-slate-100 flex flex-col overflow-y-auto p-4 lg:p-5 space-y-4 lg:space-y-6 hide-scrollbar max-h-[40vh] lg:max-h-none"
+  }, groupedPresetItems.map(([cat, items]) => /*#__PURE__*/React.createElement("div", {
+    key: cat,
+    className: "space-y-3"
+  }, /*#__PURE__*/React.createElement("h5", {
+    className: "text-[11px] font-black text-slate-400 border-b border-slate-100 pb-2 uppercase"
+  }, cat), /*#__PURE__*/React.createElement("div", {
+    className: "space-y-2"
+  }, items.map(it => /*#__PURE__*/React.createElement("div", {
+    key: it.id,
+    className: "bg-slate-50/80 rounded-2xl p-4 flex items-center justify-between border border-transparent hover:border-slate-200 hover:bg-white transition-all shadow-sm"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "min-w-0 pr-2"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "font-black text-slate-800 text-[13px] truncate"
+  }, it.name), /*#__PURE__*/React.createElement("p", {
+    className: "text-[10px] text-slate-400 font-bold truncate mt-0.5"
+  }, it.model)), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-3"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center bg-white rounded-xl p-1 border border-slate-200"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => updatePresetItemCount(it.id, -1),
+    className: "w-7 h-7 flex items-center justify-center text-slate-400 rounded-lg hover:bg-slate-50"
+  }, /*#__PURE__*/React.createElement(Minus, {
+    size: 12
+  })), /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    value: it.presetCount,
+    onChange: e => {
+      const val = Math.max(0, parseInt(e.target.value) || 0);
+      setPresets(presets => presets.map(p => p.id === activePresetId ? {
+        ...p,
+        items: p.items.map(i => i.itemId === it.id ? {
+          ...i,
+          count: val
+        } : i)
+      } : p));
+    },
+    className: "w-10 text-center text-xs font-black bg-transparent border-none focus:ring-0",
+    min: "0"
+  }), /*#__PURE__*/React.createElement("button", {
+    onClick: () => updatePresetItemCount(it.id, 1),
+    className: "w-7 h-7 flex items-center justify-center text-slate-400 rounded-lg hover:bg-slate-50"
+  }, /*#__PURE__*/React.createElement(Plus, {
+    size: 12
+  }))), /*#__PURE__*/React.createElement("button", {
+    onClick: () => toggleItemInPreset(it.id),
+    className: "p-1.5 text-slate-300 hover:text-red-500"
+  }, /*#__PURE__*/React.createElement(X, {
+    size: 16
+  }))))))))), /*#__PURE__*/React.createElement("div", {
+    className: "w-full lg:w-7/12 flex flex-col bg-slate-50/20 overflow-y-auto p-4 lg:p-6 space-y-4 hide-scrollbar max-h-[40vh] lg:max-h-none"
+  }, groups.map(g => /*#__PURE__*/React.createElement("div", {
+    key: g.id,
+    className: "bg-white rounded-2xl border border-slate-100 p-4 space-y-4"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => toggleGroupExpand(g.id),
+    className: "w-full flex items-center justify-between font-black text-sm text-slate-800"
+  }, g.name, " ", g.isExpanded ? /*#__PURE__*/React.createElement(ChevronDown, {
+    size: 18
+  }) : /*#__PURE__*/React.createElement(ChevronRight, {
+    size: 18
+  })), g.isExpanded && g.subgroups.map(sg => /*#__PURE__*/React.createElement("div", {
+    key: sg.id,
+    className: "pl-4 space-y-3"
+  }, /*#__PURE__*/React.createElement("h6", {
+    className: "text-xs font-black text-slate-400"
+  }, sg.name), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-1 md:grid-cols-2 gap-3"
+  }, sg.items.map(item => {
+    const isIn = currentPreset.items.some(pi => pi.itemId === item.id);
+    return /*#__PURE__*/React.createElement("button", {
+      key: item.id,
+      onClick: () => toggleItemInPreset(item.id),
+      className: `flex items-center justify-between p-4 rounded-2xl border text-left transition-all ${isIn ? 'bg-indigo-50 border-indigo-200' : 'bg-white border-slate-100 hover:border-slate-300'}`
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "min-w-0 pr-2"
+    }, /*#__PURE__*/React.createElement("p", {
+      className: `text-[13px] font-black truncate ${isIn ? 'text-indigo-700' : 'text-slate-800'}`
+    }, item.name)), isIn ? /*#__PURE__*/React.createElement(CheckCircle2, {
+      size: 16,
+      className: "text-indigo-600"
+    }) : /*#__PURE__*/React.createElement(Plus, {
+      size: 16,
+      className: "text-slate-200"
+    }));
+  }))))))))) : /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 flex flex-col items-center justify-center text-slate-200 p-12"
+  }, /*#__PURE__*/React.createElement(Boxes, {
+    size: 64,
+    strokeWidth: 1,
+    className: "mb-4"
+  }), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs font-black uppercase tracking-widest text-slate-400"
+  }, "\u9009\u62E9\u4E00\u4E2A\u6A21\u677F\u5F00\u59CB\u914D\u7F6E")))), activeModule === 'manifest' && /*#__PURE__*/React.createElement("div", {
+    className: "space-y-8 animate-in fade-in duration-500"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-slate-900 rounded-[24px] lg:rounded-[32px] p-5 lg:p-6 text-white shadow-2xl relative overflow-hidden border border-slate-800"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none"
+  }, /*#__PURE__*/React.createElement(Film, {
+    size: 120
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "relative z-10 flex flex-col lg:flex-row items-stretch lg:items-center gap-5 lg:gap-6"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-5"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "space-y-1.5"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] ml-1"
+  }, "\u9879\u76EE\u540D\u79F0"), /*#__PURE__*/React.createElement("div", {
+    className: "relative"
+  }, /*#__PURE__*/React.createElement(Edit3, {
+    size: 16,
+    className: "absolute left-4 top-1/2 -translate-y-1/2 text-slate-600"
+  }), /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    value: projectInfo.name,
+    onChange: e => setProjectInfo({
+      ...projectInfo,
+      name: e.target.value
+    }),
+    className: "w-full bg-slate-800/60 border border-slate-700/50 rounded-xl pl-12 pr-4 py-3 text-sm font-bold outline-none focus:ring-2 ring-green-500/30 transition-all placeholder:text-slate-700",
+    placeholder: "\u9879\u76EE\u5168\u79F0"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "space-y-1.5"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] ml-1"
+  }, "\u62CD\u6444\u5730\u70B9"), /*#__PURE__*/React.createElement("div", {
+    className: "relative"
+  }, /*#__PURE__*/React.createElement(MapPin, {
+    size: 16,
+    className: "absolute left-4 top-1/2 -translate-y-1/2 text-slate-600"
+  }), /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    value: projectInfo.location,
+    onChange: e => setProjectInfo({
+      ...projectInfo,
+      location: e.target.value
+    }),
+    className: "w-full bg-slate-800/60 border border-slate-700/50 rounded-xl pl-12 pr-4 py-3 text-sm font-bold outline-none focus:ring-2 ring-green-500/30 transition-all placeholder:text-slate-700",
+    placeholder: "\u62CD\u6444\u5730\u70B9"
+  })))), /*#__PURE__*/React.createElement("div", {
+    className: "space-y-1.5 lg:min-w-[280px]"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] ml-1"
+  }, "\u62CD\u6444\u5468\u671F"), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-3 bg-slate-800/60 border border-slate-700/50 rounded-xl px-4 py-3"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 flex items-center gap-2"
+  }, /*#__PURE__*/React.createElement(Calendar, {
+    size: 14,
+    className: "text-slate-600 shrink-0"
+  }), /*#__PURE__*/React.createElement("input", {
+    type: "date",
+    value: projectInfo.startDate,
+    onChange: e => setProjectInfo({
+      ...projectInfo,
+      startDate: e.target.value
+    }),
+    className: "bg-transparent border-none w-full min-w-0 outline-none [color-scheme:dark] text-xs font-black uppercase cursor-pointer"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "w-px h-5 bg-slate-700 shrink-0"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 flex items-center gap-2"
+  }, /*#__PURE__*/React.createElement(Calendar, {
+    size: 14,
+    className: "text-slate-600 shrink-0"
+  }), /*#__PURE__*/React.createElement("input", {
+    type: "date",
+    value: projectInfo.endDate,
+    onChange: e => setProjectInfo({
+      ...projectInfo,
+      endDate: e.target.value
+    }),
+    className: "bg-transparent border-none w-full min-w-0 outline-none [color-scheme:dark] text-xs font-black uppercase cursor-pointer"
+  })))), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-6 lg:gap-8 lg:pl-6 lg:border-l border-slate-800"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "text-center"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-[9px] lg:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1"
+  }, "\u5929\u6570"), /*#__PURE__*/React.createElement("p", {
+    className: "text-2xl lg:text-3xl font-black text-white font-mono leading-none"
+  }, calculateDays())), /*#__PURE__*/React.createElement("div", {
+    className: "text-center"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-[9px] lg:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1"
+  }, "\u4EF6\u6570"), /*#__PURE__*/React.createElement("p", {
+    className: "text-2xl lg:text-3xl font-black text-green-500 font-mono leading-none"
+  }, selectedItemsManifest.reduce((acc, g) => acc + g.subgroups.reduce((sacc, sg) => sacc + sg.items.reduce((iacc, it) => iacc + it.count, 0), 0), 0)))))), /*#__PURE__*/React.createElement("div", {
+    className: "bg-white rounded-[40px] shadow-2xl border border-slate-100 overflow-hidden"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "p-10 border-b border-slate-50 flex flex-col md:flex-row justify-between items-center bg-slate-50/30 gap-6"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h2", {
+    className: "text-2xl font-black text-slate-900 tracking-tight"
+  }, "\u6700\u7EC8\u51FA\u5E93\u6E05\u5355"), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs text-slate-400 font-bold mt-1 uppercase tracking-widest"
+  }, "Verify and Copy your list")), /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-4"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: handleCopyManifest,
+    className: "px-8 py-4 bg-slate-900 text-white rounded-2xl text-sm font-black flex items-center gap-3 hover:bg-slate-800 shadow-xl shadow-slate-200 transition-all"
+  }, /*#__PURE__*/React.createElement(Copy, {
+    size: 20
+  }), " \u590D\u5236\u6587\u672C\u6E05\u5355"))), /*#__PURE__*/React.createElement("div", {
+    className: "p-10"
+  }, selectedItemsManifest.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    className: "py-32 text-center flex flex-col items-center gap-6 opacity-30"
+  }, /*#__PURE__*/React.createElement(ClipboardList, {
+    size: 80,
+    strokeWidth: 1
+  }), /*#__PURE__*/React.createElement("p", {
+    className: "font-black text-xs uppercase tracking-[0.4em]"
+  }, "\u8BF7\u5728\u4ED3\u5E93\u4E2D\u6807\u8BB0\u51FA\u5E93\u8BBE\u5907\u6570\u91CF")) : /*#__PURE__*/React.createElement("div", {
+    className: "columns-1 md:columns-2 gap-x-6 lg:gap-x-10"
+  }, selectedItemsManifest.map(g => /*#__PURE__*/React.createElement("div", {
+    key: g.id,
+    className: "break-inside-avoid mb-6 lg:mb-10 space-y-6 bg-slate-50/40 p-6 rounded-[32px] border border-slate-50"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-4 border-b border-slate-100 pb-3"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "w-2 h-6 bg-slate-900 rounded-full"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "text-sm font-black uppercase tracking-[0.2em] text-slate-900"
+  }, g.name)), /*#__PURE__*/React.createElement("div", {
+    className: "space-y-6"
+  }, g.subgroups.map(sg => /*#__PURE__*/React.createElement("div", {
+    key: sg.id,
+    className: "space-y-3"
+  }, /*#__PURE__*/React.createElement("h5", {
+    className: "text-[11px] font-black text-slate-400 px-2 uppercase tracking-widest flex items-center gap-2"
+  }, /*#__PURE__*/React.createElement(ChevronRight, {
+    size: 12,
+    className: "text-slate-300"
+  }), sg.name), /*#__PURE__*/React.createElement("div", {
+    className: "space-y-2"
+  }, sg.items.map(it => /*#__PURE__*/React.createElement("div", {
+    key: it.id,
+    className: "flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-100 shadow-sm"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "min-w-0 pr-4"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "font-black text-slate-900 text-[13px] truncate"
+  }, it.name), it.model && /*#__PURE__*/React.createElement("p", {
+    className: "text-[10px] text-slate-400 mt-0.5 truncate"
+  }, it.model)), /*#__PURE__*/React.createElement("div", {
+    className: "shrink-0 flex items-center gap-2"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "px-3 py-1 bg-slate-900 text-white rounded-lg text-[11px] font-black font-mono"
+  }, "\xD7 ", it.count))))))))))))))), modal.show && /*#__PURE__*/React.createElement("div", {
+    className: "fixed inset-0 z-[100] flex items-center justify-center p-6"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "absolute inset-0 bg-slate-900/70 backdrop-blur-xl animate-in fade-in",
+    onClick: () => setModal(m => ({
+      ...m,
+      show: false
+    }))
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "relative bg-white rounded-[32px] lg:rounded-[40px] shadow-2xl w-full max-w-md mx-4 lg:mx-0 p-8 lg:p-12 animate-in zoom-in border border-slate-100"
+  }, /*#__PURE__*/React.createElement("h2", {
+    className: "text-2xl font-black text-slate-900 mb-6 tracking-tight"
+  }, modal.title), modal.type.includes('add') || modal.type.includes('rename') ? /*#__PURE__*/React.createElement("input", {
+    autoFocus: true,
+    type: "text",
+    value: modal.value,
+    onChange: e => setModal(m => ({
+      ...m,
+      value: e.target.value
+    })),
+    onKeyDown: e => e.key === 'Enter' && handleModalConfirm(),
+    className: "w-full px-6 py-5 bg-slate-50 rounded-2xl border-2 border-slate-100 focus:border-slate-900 outline-none font-black text-sm mb-8 transition-all",
+    placeholder: "\u5728\u6B64\u8F93\u5165\u540D\u79F0..."
+  }) : /*#__PURE__*/React.createElement("div", {
+    className: "mb-8 p-6 bg-red-50/50 rounded-2xl text-red-700 text-sm flex gap-4 font-bold border border-red-100 shadow-sm"
+  }, /*#__PURE__*/React.createElement(AlertCircle, {
+    size: 24,
+    className: "shrink-0"
+  }), /*#__PURE__*/React.createElement("p", null, "\u786E\u8BA4\u6267\u884C\u6B64\u6E05\u7406\u64CD\u4F5C\u5417\uFF1F\u5BF9\u5E94\u7684\u8BBE\u5907\u51FA\u5E93\u6570\u91CF\u5C06\u6E05\u96F6\u3002")), /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-4"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setModal(m => ({
+      ...m,
+      show: false
+    })),
+    className: "flex-1 px-4 py-5 rounded-2xl bg-slate-100 text-slate-500 font-black text-xs hover:bg-slate-200 transition-all uppercase tracking-widest"
+  }, "\u53D6\u6D88"), /*#__PURE__*/React.createElement("button", {
+    onClick: handleModalConfirm,
+    className: `flex-1 px-4 py-5 rounded-2xl text-white font-black text-xs shadow-xl transition-all uppercase tracking-widest ${modal.type.includes('delete') || modal.type.includes('Reset') || modal.type.includes('reset') ? 'bg-red-500 hover:bg-red-600 shadow-red-200' : 'bg-slate-900 hover:bg-slate-800 shadow-slate-200'}`
+  }, "\u786E\u8BA4\u6267\u884C")))), versionPanelOpen && /*#__PURE__*/React.createElement("div", {
+    className: "fixed inset-0 z-[110] flex justify-end"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "absolute inset-0 bg-slate-900/50 backdrop-blur-sm animate-in fade-in",
+    onClick: () => {
+      setVersionPanelOpen(false);
+      setRestoreConfirm(null);
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "relative w-full lg:max-w-lg bg-white h-full shadow-2xl animate-in slide-in-from-right duration-500 flex flex-col"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "p-8 border-b border-slate-100 flex items-center justify-between shrink-0"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h2", {
+    className: "text-xl font-black text-slate-900"
+  }, "\u7248\u672C\u8BB0\u5F55"), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs text-slate-400 font-bold mt-0.5"
+  }, "\u5171 ", versions.length, " \u4E2A\u7248\u672C\uFF08\u6700\u591A", MAX_VERSIONS, "\u4E2A\uFF09")), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setVersionPanelOpen(false);
+      setRestoreConfirm(null);
+    },
+    className: "p-3 bg-slate-100 rounded-2xl text-slate-500 hover:bg-slate-200 transition-all"
+  }, /*#__PURE__*/React.createElement(X, {
+    size: 20
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 overflow-y-auto p-6 space-y-4"
+  }, versions.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    className: "py-20 text-center text-slate-300"
+  }, /*#__PURE__*/React.createElement(History, {
+    size: 48,
+    strokeWidth: 1,
+    className: "mx-auto mb-4"
+  }), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs font-black uppercase tracking-widest"
+  }, "\u6682\u65E0\u7248\u672C\u8BB0\u5F55"), /*#__PURE__*/React.createElement("p", {
+    className: "text-[11px] text-slate-300 mt-2"
+  }, "\u8FDB\u884C\u4FEE\u6539\u64CD\u4F5C\u540E\u4F1A\u81EA\u52A8\u4FDD\u5B58\u7248\u672C")) : versions.map(v => /*#__PURE__*/React.createElement("div", {
+    key: v.id,
+    className: `bg-slate-50 rounded-2xl p-5 border transition-all ${restoreConfirm === v.id ? 'border-indigo-400 ring-2 ring-indigo-100' : 'border-slate-100 hover:border-slate-200'}`
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-start justify-between gap-3"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "min-w-0 flex-1"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "font-black text-slate-800 text-sm"
+  }, v.label), /*#__PURE__*/React.createElement("p", {
+    className: "text-[11px] text-slate-400 font-bold mt-1"
+  }, fmtTime(v.time)), /*#__PURE__*/React.createElement("p", {
+    className: "text-[10px] text-slate-300 mt-0.5"
+  }, v.groups.length, " \u5927\u7EC4 \xB7 ", v.groups.reduce((a, g) => a + g.subgroups.reduce((b, sg) => b + sg.items.length, 0), 0), " \u8BBE\u5907 \xB7 ", v.presets.length, " \u9884\u8BBE")), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2 shrink-0"
+  }, restoreConfirm === v.id ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+    onClick: () => restoreVersion(v),
+    className: "px-3 py-2 bg-indigo-600 text-white rounded-xl text-xs font-black hover:bg-indigo-700 transition-all"
+  }, "\u786E\u8BA4\u6062\u590D"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setRestoreConfirm(null),
+    className: "px-3 py-2 bg-slate-200 text-slate-500 rounded-xl text-xs font-black hover:bg-slate-300 transition-all"
+  }, "\u53D6\u6D88")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setRestoreConfirm(v.id),
+    className: "px-3 py-2 bg-white text-indigo-600 rounded-xl text-xs font-black border border-indigo-200 hover:bg-indigo-50 transition-all"
+  }, "\u6062\u590D"), /*#__PURE__*/React.createElement("button", {
+    onClick: e => handleDeleteVersion(e, v.id),
+    className: "p-2 text-slate-300 hover:text-red-500 transition-all"
+  }, /*#__PURE__*/React.createElement(Trash2, {
+    size: 14
+  }))))), restoreConfirm === v.id && /*#__PURE__*/React.createElement("p", {
+    className: "mt-3 text-xs text-indigo-600 font-bold bg-indigo-50 rounded-xl p-3"
+  }, "\u786E\u8BA4\u6062\u590D\u5230\u8BE5\u7248\u672C\uFF1F\u5F53\u524D\u6570\u636E\u5C06\u88AB\u66FF\u6362\u4E3A\u6B64\u7248\u672C\u7684\u72B6\u6001\u3002")))), versions.length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "p-6 border-t border-slate-100 shrink-0"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: handleClearVersions,
+    className: "w-full px-4 py-4 bg-red-50 text-red-500 rounded-2xl text-xs font-black hover:bg-red-100 transition-all uppercase tracking-widest"
+  }, "\u6E05\u9664\u6240\u6709\u7248\u672C\u8BB0\u5F55")))), toast.show && /*#__PURE__*/React.createElement("div", {
+    className: "fixed bottom-12 left-1/2 -translate-x-1/2 z-[120] animate-in slide-in-from-bottom-12 duration-500"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-slate-900/90 text-white px-10 py-5 rounded-full shadow-2xl flex items-center gap-4 font-black text-[13px] border border-slate-700/50 backdrop-blur-2xl"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "w-2 h-2 rounded-full bg-green-400"
+  }), toast.message)));
+};
+ReactDOM.createRoot(document.getElementById('root')).render(/*#__PURE__*/React.createElement(App, null));
