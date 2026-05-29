@@ -164,6 +164,8 @@
       const [dragIndex, setDragIndex] = useState(null);
       const [restoreConfirm, setRestoreConfirm] = useState(null);
 
+      const [firebaseOnline, setFirebaseOnline] = useState(false);
+
       // Keep a ref of current state so saveVersion can always read latest
       const stateRef = useRef({ groups, presets, projectInfo });
       useEffect(() => { stateRef.current = { groups, presets, projectInfo }; }, [groups, presets, projectInfo]);
@@ -188,8 +190,10 @@
             if (saved.groups[0]?.id) setActiveGroupId(saved.groups[0].id);
             if (saved.groups[0]?.subgroups[0]?.id) setActiveSubgroupId(saved.groups[0].subgroups[0].id);
           }
+          setFirebaseOnline(true);
           setLoading(false);
         }).catch(() => {
+          setFirebaseOnline(false);
           const saved = loadState();
           setGroups(saved.groups);
           setPresets(saved.presets);
@@ -225,8 +229,9 @@
                 setPresets(d.presets || defaultPresets);
                 setProjectInfo(d.projectInfo || { name: '', startDate: '', endDate: '', location: '' });
               }
+              setFirebaseOnline(true);
             }
-          } catch(e) {}
+          } catch(e) { setFirebaseOnline(false); }
           if (active) setTimeout(poll, 2000);
         };
         poll();
@@ -248,7 +253,7 @@
         cloudVerRef.current = ver;
         const data = { groups, presets, projectInfo, _ver: ver };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        cloudDoc.set(data).catch(() => {});
+        cloudDoc.set(data).then(() => setFirebaseOnline(true)).catch(() => setFirebaseOnline(false));
       }, [groups, presets, projectInfo, loading]);
 
       // Save versions to Firestore
@@ -589,6 +594,7 @@
               <div className="flex items-center gap-3 lg:gap-4 shrink-0">
                 <div className="w-10 h-10 lg:w-12 lg:h-12 bg-slate-900 rounded-2xl flex items-center justify-center shadow-2xl ring-4 ring-slate-100 shrink-0"><Film className="text-white" size={22} /></div>
                 <h1 className="text-lg lg:text-2xl font-black text-slate-900 tracking-tight whitespace-nowrap">出库助手</h1>
+                <span className={`w-2 h-2 rounded-full shrink-0 ${firebaseOnline ? 'bg-green-500' : 'bg-red-500'}`} title={firebaseOnline ? '云端已连接' : '云端未连接'}></span>
               </div>
               <div className="flex items-center gap-2 lg:gap-4 flex-wrap w-full lg:w-auto">
                 {/* Search */}
