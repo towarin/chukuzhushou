@@ -206,6 +206,7 @@
 
       // Poll Firestore for remote changes from other users
       const cloudVerRef = useRef(0);
+      const isRemoteUpdate = useRef(false);
       useEffect(() => {
         if (loading) return;
         const interval = setInterval(async () => {
@@ -216,6 +217,7 @@
             const ver = d._ver || 0;
             if (ver !== cloudVerRef.current) {
               cloudVerRef.current = ver;
+              isRemoteUpdate.current = true;
               setGroups(d.groups);
               setPresets(d.presets || defaultPresets);
               setProjectInfo(d.projectInfo || { name: '', startDate: '', endDate: '', location: '' });
@@ -225,11 +227,13 @@
         return () => clearInterval(interval);
       }, [loading]);
 
-      // Save to Firestore + localStorage whenever data changes
+      // Save to Firestore + localStorage whenever data changes (user actions only)
       const skipSaveRef = useRef(true);
       useEffect(() => {
         if (loading) return;
-        // Skip the first save triggered by initial load (data was just loaded, no user change)
+        // Skip saves triggered by remote updates (other devices' changes) — only save user actions
+        if (isRemoteUpdate.current) { isRemoteUpdate.current = false; return; }
+        // Skip the first save triggered by initial load
         if (skipSaveRef.current) { skipSaveRef.current = false; return; }
         const ver = Date.now();
         cloudVerRef.current = ver;
